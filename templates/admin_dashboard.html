@@ -488,12 +488,17 @@
     <div class="main-content" id="mainContent">
         <div class="header">
             <h1>Dashboard</h1>
-            <script src="/static/common.js"></script>
-            <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
+                        <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
                 <option value="en">English</option>
                 <option value="hi">हिन्दी</option>
             </select>
-            <div class="user-info">
+            <script src="/static/common.js"></script>
+            <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
+    <option value="en">English</option>
+    <option value="hi">हिन्दी</option>
+</select>
+<script src="/static/common.js"></script>
+<div class="user-info">
                 <span class="user-chip"><i class="fas fa-user-shield"></i> {{ admin_id }}</span>
                 <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
@@ -704,11 +709,8 @@
                             </tr></thead>
                             <tbody>
                             {% for f in faculty_data %}
-                                {% if f.role and f.role|lower == 'accounts' %}
-                                    {% set is_accounts_role = true %}
-                                {% else %}
-                                    {% set is_accounts_role = false %}
-                                {% endif %}
+                                {% set is_accounts_role = f.is_accounts or (f.role and f.role|lower == 'accounts') %}
+                                {% set role_flag = 'true' if is_accounts_role else 'false' %}
                                 <tr>
                                     <td><span class="cell-id">{{ f.faculty_id }}</span></td>
                                     <td><strong>{{ f.name }}</strong></td>
@@ -723,15 +725,11 @@
                                     </td>
                                     <td>
                                         <div class="sams-action-cell">
-                                            <button class="sams-btn-icon orange"
-                                                title="{% if is_accounts_role %}Switch to Academic{% else %}Switch to Accounts{% endif %}"
-                                                data-fid="{{ f.faculty_id }}"
-                                                data-is-accounts="{% if is_accounts_role %}true{% else %}false{% endif %}"
-                                                onclick="toggleAccountsRole(this.dataset.fid, this.dataset.isAccounts === 'true')">
+                                            <button class="sams-btn-icon orange" title="{{ 'Switch to Academic' if is_accounts_role else 'Switch to Accounts' }}"
+                                                onclick="toggleAccountsRole('{{ f.faculty_id }}', {{ 'false' if is_accounts_role else 'true' }})">
                                                 <i class="fas fa-exchange-alt"></i>
                                             </button>
-                                            <form method="POST" style="display:inline;"
-                                                onsubmit="return confirm('Delete faculty member?')">
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ f.name }}?')">
                                                 <input type="hidden" name="delete_faculty_id" value="{{ f.faculty_id }}">
                                                 <button type="submit" name="delete_faculty" class="sams-btn-icon red" title="Delete">
                                                     <i class="fas fa-trash"></i>
@@ -1002,7 +1000,7 @@
                             </button>
                         </div>
                     </form>
-                    {% if timetable_data %}
+                    {% if timetable_list %}
                     <table>
                         <thead>
                             <tr><th>Dept</th><th>Year</th><th>Sec</th><th>Sem</th><th>File</th><th>Actions</th></tr>
@@ -1014,7 +1012,7 @@
                                 <td>{{ tt.year }}</td>
                                 <td>{{ tt.section }}</td>
                                 <td>{{ tt.semester }}</td>
-                                <td><a href="/uploads/{{ tt.file_path }}" target="_blank">View</a></td>
+                                <td><a href="/uploads/{{ tt.filename }}" target="_blank">View</a></td>
                                 <td>
                                     <form method="POST" style="display:inline;" onsubmit="return confirm('Delete timetable?')">
                                         <input type="hidden" name="delete_tt_id" value="{{ tt.id }}">
