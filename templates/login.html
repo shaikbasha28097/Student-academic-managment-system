@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login – SAMS DRK</title>
+<meta name="description" content="Login to the Student Attendance Management System at DRK Institute of Science & Technology">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+body{
+    font-family:"Segoe UI", Arial, sans-serif;
+    min-height:100vh;
+    margin:0;
+    background:
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        url("https://imgs.search.brave.com/vdSFvxruLa0l7xZoAT9WmPgtSty5HI22f_4z7Y741ig/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9kcmtp/c3QuaW4vc3RhdGlj/LzIuanBn");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+}
+.container{
+    background:rgba(255,255,255,0.96);
+    padding:35px;
+    border-radius:12px;
+    width:380px;
+    box-shadow:0 15px 30px rgba(0,0,0,0.35);
+    text-align:center;
+    margin-right:10%;
+}
+h1{ color:#e53935; font-size:22px; margin-bottom:5px; }
+h2{ margin-bottom:20px; font-size:18px; color:#333; }
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:14px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:15px;
+    box-sizing:border-box;
+}
+.password-wrapper{
+    position:relative; width:100%; margin-bottom:14px;
+}
+.password-wrapper input{ margin-bottom:0; padding-right:45px; }
+.password-wrapper .toggle-password{
+    position:absolute; right:0; top:50%; transform:translateY(-50%);
+    background:transparent; border:none; cursor:pointer; color:#777;
+    font-size:18px; width:45px; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:0 6px 6px 0; transition:background 0.2s;
+}
+.password-wrapper .toggle-password:hover{ background:rgba(0,0,0,0.05); color:#2196F3; }
+.role-box{ display:flex; gap:10px; margin-bottom:15px; }
+.role-box input{ display:none; }
+.role-box label{
+    flex:1; padding:12px; text-align:center;
+    border-radius:6px; border:1px solid #ccc;
+    cursor:pointer; font-weight:600;
+    transition:all 0.2s;
+}
+.role-box input:checked + label{
+    background:#1abc9c; color:#fff; border-color:#1abc9c;
+}
+button{
+    width:100%; padding:12px; border:none;
+    border-radius:6px; font-size:15px; cursor:pointer;
+}
+.login-btn{ background:#2196F3; color:#fff; margin-bottom:10px; }
+.register-btn{ background:#4CAF50; color:#fff; }
+button:hover{ opacity:0.9; }
+.error{ color:#e53935; text-align:center; margin-bottom:10px; }
+.success{ color:#27ae60; text-align:center; margin-bottom:10px; }
+.forgot{ text-align:right; margin-bottom:12px; }
+.forgot a{ font-size:13px; text-decoration:none; color:#1d2671; }
+.forgot a:hover{ text-decoration:underline; }
+.note{ font-size:12px; color:#666; text-align:center; margin-top:12px; }
+@media(max-width:768px){
+    body{ justify-content:center; align-items:center; padding:15px; box-sizing:border-box; }
+    .container{ margin:0 auto; width:100%; max-width:420px; padding:25px 20px; box-sizing:border-box; }
+    h1{ font-size:18px; }
+    h2{ font-size:16px; }
+    .role-box label{ padding:10px 6px; font-size:13px; }
+    input{ font-size:15px; }
+    button{ font-size:15px; padding:13px; }
+    .note{ font-size:11px; }
+}
+</style>
+<script>
+function togglePassword(button) {
+    const input = button.previousElementSibling;
+    const icon  = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye','fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash','fa-eye');
+    }
+}
+</script>
+</head>
+<body class="sams-layout">
+<div class="container">
+    <h1>DRK Institute of Science &amp; Technology</h1>
+    <h2>Login</h2>
+
+    <div class="error">{{ error }}</div>
+    <div class="success">{{ success }}</div>
+
+    <form action="{{ url_for('login_check') }}" method="POST">
+        <div class="role-box">
+            <input type="radio" name="role" value="admin" id="admin">
+            <label for="admin">Admin</label>
+
+            <input type="radio" name="role" value="student" id="student" required>
+            <label for="student">Student</label>
+
+            <input type="radio" name="role" value="faculty" id="faculty">
+            <label for="faculty">Faculty</label>
+        </div>
+
+        <input type="text" name="user_id" placeholder="ID / Admin Name" required>
+
+        <div class="password-wrapper">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword(this)">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <div class="forgot">
+            <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+    </form>
+
+    <form action="{{ url_for('register_page') }}" method="get">
+        <button type="submit" class="register-btn">Register</button>
+    </form>
+
+    <div class="note">Student ID example: <b>23U51A05A6</b></div>
+</div>
+</div>
+<script src="/static/ux.js"></script>
+</body>
+</html>

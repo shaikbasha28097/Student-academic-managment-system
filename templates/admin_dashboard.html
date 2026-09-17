@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* ── Use shared SAMS design system from styles.css ── */
+        * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
+        body {
+            font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+            background: #f0f4f8;
+            margin: 0; padding: 0;
+            display: flex;
+            min-height: 100vh;
+            color: #111827;
+            min-width: 320px;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 200;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 18px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-brand .brand-icon {
+            width: 38px; height: 38px;
+            background: #3b82f6; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: #fff; flex-shrink: 0;
+        }
+        .sidebar-brand .brand-text { line-height: 1.3; }
+        .sidebar-brand .brand-name { font-size: 15px; font-weight: 800; color: #fff; }
+        .sidebar-brand .brand-sub  { font-size: 11px; color: #64748b; font-weight: 500; }
+
+        .sidebar a {
+            display: flex; align-items: center; gap: 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 13px 18px;
+            font-size: 14px; font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.18s;
+        }
+        .sidebar a i { width: 18px; font-size: 15px; text-align: center; flex-shrink: 0; }
+        .sidebar a:hover { background: #334155; color: #fff; }
+        .sidebar a.active {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+            border-right: 3px solid #3b82f6;
+            font-weight: 700;
+        }
+        .sidebar-section-label {
+            font-size: 10px; font-weight: 700; color: #475569;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 12px 18px 4px 18px;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+        }
+
+        /* ── Top Header ── */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 28px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .header h1 { margin: 0; font-size: 19px; font-weight: 700; color: #111827; }
+        .header .user-info {
+            display: flex; align-items: center; gap: 14px;
+            font-size: 14px; color: #374151;
+        }
+        .header .user-chip {
+            display: flex; align-items: center; gap: 7px;
+            background: #f1f5f9; border: 1px solid #e5e7eb;
+            border-radius: 100px; padding: 6px 14px;
+            font-weight: 600;
+        }
+        .header .user-chip i { color: #3b82f6; }
+        .header .logout-btn {
+            background: #ef4444; color: white;
+            text-decoration: none; padding: 8px 16px;
+            border-radius: 9px; font-weight: 700; font-size: 14px;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .header .logout-btn:hover { background: #dc2626; }
+
+        /* ── Content Area ── */
+        .content { padding: 26px; flex: 1; overflow-x: auto; }
+
+        /* ── Card wrapper ── */
+        .sams-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+        .sams-card-header {
+            padding: 18px 22px;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .sams-card-title {
+            font-size: 17px; font-weight: 700; color: #111827;
+            display: flex; align-items: center; gap: 10px; margin: 0;
+        }
+        .sams-card-title i { color: #3b82f6; font-size: 16px; }
+        .sams-card-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+        .sams-card-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* ── Filter Bar ── */
+        .sams-filter-bar {
+            padding: 14px 22px;
+            display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
+        }
+        .sams-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 340px; }
+        .sams-search-wrap i {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: #9ca3af; font-size: 13px;
+        }
+        .sams-search-input {
+            width: 100%; padding: 9px 12px 9px 36px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #111827;
+            background: #fff; outline: none; box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .sams-search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        .sams-select {
+            padding: 9px 12px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #374151;
+            background: #fff; outline: none; cursor: pointer; min-width: 130px;
+        }
+        .sams-select:focus { border-color: #3b82f6; }
+
+        /* ── THE TABLE ── */
+        .sams-table {
+            width: 100%; border-collapse: collapse;
+            font-family: inherit; min-width: 560px;
+        }
+        .sams-table thead tr {
+            background: #f8fafc;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .sams-table th {
+            padding: 13px 18px;
+            font-size: 13px; font-weight: 700;
+            color: #374151; text-align: left;
+            white-space: nowrap;
+        }
+        .sams-table td {
+            padding: 14px 18px;
+            font-size: 14px; font-weight: 500;
+            color: #111827;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .sams-table tbody tr:hover { background: #f8fafc; }
+        .sams-table tbody tr:last-child td { border-bottom: none; }
+        .cell-id { font-size: 13px; font-weight: 700; color: #3b82f6; font-family: 'Courier New',monospace; }
+        .cell-muted { color: #6b7280; font-size: 13px; }
+        .cell-center { text-align: center; }
+
+        /* ── Badges ── */
+        .sams-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 11px; border-radius: 100px;
+            font-size: 12px; font-weight: 700; white-space: nowrap;
+        }
+        .sams-badge.green  { background: rgba(34,197,94,0.12);  color: #16a34a; }
+        .sams-badge.red    { background: rgba(239,68,68,0.12);   color: #dc2626; }
+        .sams-badge.blue   { background: rgba(59,130,246,0.12);  color: #2563eb; }
+        .sams-badge.orange { background: rgba(245,158,11,0.12);  color: #d97706; }
+        .sams-badge.purple { background: rgba(139,92,246,0.12);  color: #7c3aed; }
+        .sams-badge.teal   { background: rgba(20,184,166,0.12);  color: #0f766e; }
+        .sams-badge.gray   { background: rgba(107,114,128,0.12); color: #4b5563; }
+
+        /* Legacy badges (keep working) */
+        .badge-present { background: rgba(34,197,94,0.12); color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-absent  { background: rgba(239,68,68,0.12);  color: #dc2626; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-accounts { background: rgba(239,68,68,0.12); color: #dc2626; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-academic { background: rgba(34,197,94,0.12); color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-paid    { background: rgba(34,197,94,0.12);  color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-pending { background: rgba(245,158,11,0.12); color: #d97706; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+
+        /* ── Action Buttons ── */
+        .sams-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px; border: none;
+            cursor: pointer; font-family: inherit; font-size: 13px;
+            font-weight: 600; text-decoration: none;
+            transition: all 0.18s; white-space: nowrap;
+        }
+        .sams-btn:hover { opacity: 0.87; transform: translateY(-1px); }
+        .sams-btn.blue   { background: #3b82f6; color: #fff; }
+        .sams-btn.green  { background: #22c55e; color: #fff; }
+        .sams-btn.red    { background: #ef4444; color: #fff; }
+        .sams-btn.orange { background: #f59e0b; color: #fff; }
+        .sams-btn.teal   { background: #14b8a6; color: #fff; }
+        .sams-btn.gray   { background: #e5e7eb; color: #374151; }
+
+        .sams-btn-icon {
+            width: 32px; height: 32px; border-radius: 8px; border: none;
+            cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; transition: all 0.18s;
+        }
+        .sams-btn-icon.blue   { background: rgba(59,130,246,0.12);  color: #2563eb; }
+        .sams-btn-icon.red    { background: rgba(239,68,68,0.12);    color: #dc2626; }
+        .sams-btn-icon.green  { background: rgba(34,197,94,0.12);    color: #16a34a; }
+        .sams-btn-icon.orange { background: rgba(245,158,11,0.12);   color: #d97706; }
+        .sams-btn-icon:hover { filter: brightness(0.88); transform: scale(1.08); }
+
+        .sams-action-cell { display: flex; align-items: center; gap: 6px; }
+
+        /* ── Progress Bar ── */
+        .sams-progress-wrap { display: flex; align-items: center; gap: 10px; }
+        .sams-progress-bar { height: 7px; flex: 1; background: #e5e7eb; border-radius: 100px; overflow: hidden; min-width: 60px; }
+        .sams-progress-fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
+        .sams-progress-fill.good   { background: #22c55e; }
+        .sams-progress-fill.warn   { background: #f59e0b; }
+        .sams-progress-fill.danger { background: #ef4444; }
+        .sams-progress-pct { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; }
+        .sams-progress-pct.good   { color: #16a34a; }
+        .sams-progress-pct.warn   { color: #d97706; }
+        .sams-progress-pct.danger { color: #dc2626; }
+
+        /* ── Pagination ── */
+        .sams-pagination {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 22px; border-top: 1px solid #f1f5f9;
+            flex-wrap: wrap; gap: 10px; background: #fafbfc;
+        }
+        .sams-pagination-info { font-size: 13px; color: #6b7280; font-weight: 500; }
+        .sams-page-btns { display: flex; align-items: center; gap: 4px; }
+        .sams-page-btn {
+            width: 32px; height: 32px;
+            border: 1.5px solid #e5e7eb; border-radius: 8px;
+            background: #fff; color: #374151;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.18s; font-family: inherit;
+        }
+        .sams-page-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+        .sams-page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+        .sams-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── ID Tags ── */
+        .sams-id-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(34,197,94,0.1); color: #15803d;
+            border: 1px solid rgba(34,197,94,0.3); border-radius: 100px;
+            padding: 5px 12px; font-size: 13px; font-weight: 700; margin: 3px 3px;
+        }
+        .sams-id-tag a { color: #dc2626; text-decoration: none; font-weight: 900; font-size: 15px; line-height: 1; }
+        .sams-id-tag a:hover { opacity: 0.7; }
+
+        /* ── Alert / Message ── */
+        .sams-alert {
+            padding: 12px 18px; border-radius: 12px;
+            font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .sams-alert.success { background: rgba(34,197,94,0.1);  color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
+        .sams-alert.error   { background: rgba(239,68,68,0.1);   color: #b91c1c; border: 1px solid rgba(239,68,68,0.25); }
+        .sams-alert.info    { background: rgba(59,130,246,0.1);  color: #1d4ed8; border: 1px solid rgba(59,130,246,0.25); }
+        .sams-alert.warning { background: rgba(245,158,11,0.1);  color: #92400e; border: 1px solid rgba(245,158,11,0.25); }
+
+        /* ── Stats Row ── */
+        .sams-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 22px;
+        }
+        .sams-stat-card {
+            background: #fff; border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .sams-stat-icon {
+            width: 46px; height: 46px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .sams-stat-icon.blue   { background: rgba(59,130,246,0.12);  color: #3b82f6; }
+        .sams-stat-icon.green  { background: rgba(34,197,94,0.12);   color: #22c55e; }
+        .sams-stat-icon.red    { background: rgba(239,68,68,0.12);    color: #ef4444; }
+        .sams-stat-icon.orange { background: rgba(245,158,11,0.12);   color: #f59e0b; }
+        .sams-stat-icon.purple { background: rgba(139,92,246,0.12);   color: #8b5cf6; }
+        .sams-stat-icon.teal   { background: rgba(20,184,166,0.12);   color: #14b8a6; }
+        .sams-stat-val { font-size: 24px; font-weight: 800; color: #111827; line-height: 1.1; }
+        .sams-stat-lbl { font-size: 12.5px; font-weight: 500; color: #6b7280; margin-top: 2px; }
+
+        /* ── Modals (legacy + new) ── */
+        .modal-overlay, [id$="Modal"]:not(div > [id$="Modal"]) {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-box, .modal-content-box {
+            background: #fff; border-radius: 18px;
+            padding: 28px; width: 480px;
+            max-width: 94vw; max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-title { font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #111827;
+            background: #fff; outline: none; box-sizing: border-box;
+        }
+        .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        /* Legacy compatibility */
+        .section-title { margin: 0 0 18px 0; color: #111827; font-size: 20px; font-weight: 700; }
+        .table-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); margin-bottom: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 560px; }
+        th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #374151; font-weight: 700; font-size: 13px; border-bottom: 2px solid #e5e7eb; }
+        tr:hover { background: #f8fafc; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 9px; border: none;
+            cursor: pointer; font-family: inherit; font-size: 13px;
+            font-weight: 600; color: #fff; transition: all 0.18s;
+        }
+        .btn:hover { opacity: 0.87; }
+
+        /* ── Hamburger Button ── */
+        .hamburger {
+            display: none; position: fixed; top: 12px; left: 12px;
+            z-index: 1100; background: #1e293b; color: #fff;
+            border: none; border-radius: 9px; width: 42px; height: 42px;
+            font-size: 20px; cursor: pointer;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 900;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .sidebar { width: 220px; }
+            .main-content { margin-left: 220px; width: calc(100% - 220px); }
+            .content { padding: 20px; }
+            .header { padding: 0 20px; }
+            .sams-card-header { padding: 16px 18px; }
+        }
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .sidebar { transform: translateX(-100%); z-index: 1000; width: 270px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; width: 100% !important; }
+            .content { padding: 14px; padding-top: 68px; }
+            .header { padding: 12px 14px; height: auto; min-height: 62px; flex-wrap: wrap; gap: 10px; }
+            .header .user-info { width: 100%; justify-content: flex-end; }
+            .header h1 { font-size: 16px; }
+            .sams-stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .sams-filter-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .sams-search-wrap { max-width: 100%; }
+            .sams-select { width: 100%; }
+            table { min-width: 500px; font-size: 13px; }
+            th, td { padding: 10px 12px; }
+            .sams-table { min-width: 520px; }
+            .sams-table th, .sams-table td { padding: 10px 13px; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
+        }
+        @media (max-width: 480px) {
+            .content { padding: 12px; padding-top: 72px; }
+            .header .user-info { flex-direction: column; align-items: flex-start; width: 100%; }
+            .header .logout-btn { width: 100%; justify-content: center; }
+            .sams-stats-row { grid-template-columns: 1fr 1fr; gap: 9px; }
+            .sams-stat-card { padding: 14px; gap: 10px; }
+            .sams-stat-val { font-size: 20px; }
+            .sams-card-header { padding: 14px 16px; }
+            .sams-table th, .sams-table td { padding: 9px 11px; font-size: 12px; }
+        }
+
+        /* ── Performance detail tabs ── */
+        .tab { overflow: hidden; border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px 10px 0 0; }
+        .tab button { background: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #374151; transition: 0.2s; }
+        .tab button:hover { background: #e5e7eb; }
+        .tab button.active { background: #fff; color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tabcontent { display: none; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+        .summary-box { background: #f8fafc; padding: 14px; border-radius: 10px; margin-bottom: 18px; }
+        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; font-size: 14px; }
+        .marks-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+        .marks-table th { background: #1e293b; color: #fff; padding: 10px 14px; font-size: 13px; text-align: left; }
+        .marks-table td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Button -->
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="brand-text">
+                <div class="brand-name">Admin Panel</div>
+                <div class="brand-sub">SAMS 4th Year</div>
+            </div>
+        </div>
+        <div class="sidebar-section-label" style="padding:14px 18px 4px; font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; text-transform:uppercase;">Management</div>
+        <a href="?tab=students" class="{{ 'active' if active_tab == 'students' else '' }}">
+            <i class="fas fa-user-graduate"></i> All Students
+        </a>
+        <a href="?tab=performance" class="{{ 'active' if active_tab == 'performance' else '' }}">
+            <i class="fas fa-chart-line"></i> Performance
+        </a>
+        <a href="?tab=faculty" class="{{ 'active' if active_tab == 'faculty' else '' }}">
+            <i class="fas fa-chalkboard-teacher"></i> Faculty Members
+        </a>
+        <a href="?tab=assignments" class="{{ 'active' if active_tab == 'assignments' else '' }}">
+            <i class="fas fa-tasks"></i> Assignments
+        </a>
+        <div class="sidebar-section-label" style="padding:14px 18px 4px; font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; text-transform:uppercase;">Records</div>
+        <a href="?tab=attendance" class="{{ 'active' if active_tab == 'attendance' else '' }}">
+            <i class="fas fa-calendar-check"></i> Attendance
+        </a>
+        <a href="?tab=exams" class="{{ 'active' if active_tab == 'exams' else '' }}">
+            <i class="fas fa-file-alt"></i> Exam Results
+        </a>
+        <a href="?tab=fees" class="{{ 'active' if active_tab == 'fees' else '' }}">
+            <i class="fas fa-rupee-sign"></i> Tuition Fees
+        </a>
+        <a href="?tab=timetable" class="{{ 'active' if active_tab == 'timetable' else '' }}">
+            <i class="fas fa-clock"></i> Time Table
+        </a>
+        <div class="sidebar-section-label" style="padding:14px 18px 4px; font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; text-transform:uppercase;">Results</div>
+        <a href="?tab=jntuh" class="{{ 'active' if active_tab == 'jntuh' else '' }}" style="color:#60a5fa; font-weight:700;">
+            <i class="fas fa-graduation-cap"></i> JNTUH Results
+        </a>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <script src="/static/common.js"></script>
+            <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+            </select>
+            <div class="user-info">
+                <span class="user-chip"><i class="fas fa-user-shield"></i> {{ admin_id }}</span>
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+
+        <div class="content">
+            
+            {% if active_tab == 'students' %}
+                {% if msg %}
+                <div class="sams-alert {{ 'success' if 'Delete' not in msg else 'error' }}">
+                    <i class="fas fa-{{ 'check-circle' if 'Delete' not in msg else 'info-circle' }}"></i> {{ msg }}
+                </div>
+                {% endif %}
+
+                <!-- Pre-Approve Panel -->
+                <div class="sams-card" style="margin-bottom:18px;">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas fa-user-check"></i> Pre-Approve Student ID for Registration</h3>
+                    </div>
+                    <div style="padding:18px 22px; display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start;">
+                        <div style="flex:1; min-width:220px;">
+                            <form method="POST" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <input type="text" name="allow_student_id" placeholder="e.g. 21U51A0501" required
+                                    style="flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none; min-width:160px;">
+                                <button type="submit" name="allow_student" class="sams-btn green">
+                                    <i class="fas fa-check"></i> Approve ID
+                                </button>
+                            </form>
+                            {% if allowed_students_list %}
+                            <div style="margin-top:12px;">
+                                <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">Currently Pre-Approved IDs ({{ allowed_students_list | length }}):</div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                    {% for item in allowed_students_list %}
+                                    <span class="sams-id-tag">
+                                        {{ item.student_id }}
+                                        <a href="?tab=students&delete_allowed_student={{ item.student_id }}" onclick="return confirm('Remove pre-approval for {{ item.student_id }}?')">×</a>
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div style="border-left:1px solid #e5e7eb; padding-left:18px; flex:1; min-width:220px;">
+                            <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:10px;">Filter by:</div>
+                            <form method="GET" style="display:flex; gap:9px; flex-wrap:wrap;">
+                                <input type="hidden" name="tab" value="students">
+                                <select name="department" class="sams-select" onchange="this.form.submit()">
+                                    <option value="">All Departments</option>
+                                    {% for d in ['CSE','ECE','EEE','MECH','CIVIL','IT','AIDS','AIML'] %}
+                                    <option value="{{d}}" {{ 'selected' if filter_dept==d }}>{{d}}</option>
+                                    {% endfor %}
+                                </select>
+                                <select name="year" class="sams-select" onchange="this.form.submit()">
+                                    <option value="">All Years</option>
+                                    {% for y in ['1','2','3','4'] %}
+                                    <option value="{{y}}" {{ 'selected' if filter_year==y }}>Year {{y}}</option>
+                                    {% endfor %}
+                                </select>
+                                <select name="section" class="sams-select" onchange="this.form.submit()">
+                                    <option value="">All Sections</option>
+                                    {% for s in ['A','B','C','D'] %}
+                                    <option value="{{s}}" {{ 'selected' if filter_section==s }}>{{s}}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if filter_dept and filter_year and filter_section %}
+                                <button type="button" class="sams-btn orange" onclick="document.getElementById('bulkUpdateModal').style.display='block'">
+                                    <i class="fas fa-edit"></i> Bulk Edit
+                                </button>
+                                {% else %}
+                                <button type="button" class="sams-btn gray" title="Select Dept + Year + Section first" style="cursor:not-allowed;">
+                                    <i class="fas fa-lock"></i> Bulk Edit
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student List Table -->
+                <div class="sams-card">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas fa-user-graduate"></i> Student List</h3>
+                        <div class="sams-card-actions">
+                            <div class="sams-search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="sams-search-input" id="studentSearch" oninput="filterTable('studentTbody', this.value)" placeholder="Search by ID, Name, Email...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sams-card-body">
+                        <table class="sams-table" id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Year/Section</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTbody">
+                            {% for s in students_data %}
+                                <tr>
+                                    <td><span class="cell-id">{{ s.student_id }}</span></td>
+                                    <td><strong>{{ s.name }}</strong></td>
+                                    <td>{{ s.department }}</td>
+                                    <td><span class="sams-badge blue">{{ s.year }}rd Yr / {{ s.section }}</span></td>
+                                    <td><span class="cell-muted">{{ s.email }}</span></td>
+                                    <td><span class="cell-muted">{{ s.phone }}</span></td>
+                                    <td>
+                                        <div class="sams-action-cell">
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ s.name }}?')">
+                                                <input type="hidden" name="delete_student_id" value="{{ s.student_id }}">
+                                                <button type="submit" name="delete_student" class="sams-btn-icon red" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="7" style="text-align:center; padding:40px; color:#9ca3af;"><i class="fas fa-users" style="font-size:28px; display:block; margin-bottom:10px; opacity:0.4;"></i>No students found.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="sams-pagination">
+                        <span class="sams-pagination-info">Showing {{ students_data | length }} students</span>
+                    </div>
+                </div>
+
+            {% elif active_tab == 'performance' %}
+                <div class="sams-card">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas fa-chart-line"></i> Student Performance</h3>
+                        <div class="sams-card-actions">
+                            {% set tabName = 'performance' %}
+                            {% include 'admin_filter.html' %}
+                        </div>
+                    </div>
+                    <div class="sams-card-body">
+                        <table class="sams-table">
+                            <thead><tr>
+                                <th>Student ID</th><th>Name</th><th>Dept</th><th>Year/Sec</th>
+                                <th>Attendance</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody>
+                            {% for s in students_data %}
+                                {% set pct = att_map.get(s.student_id, 0) if (att_map is defined and att_map) else 0 %}
+                                {% set pct_class = 'good' if pct >= 75 else ('warn' if pct >= 60 else 'danger') %}
+                                <tr>
+                                    <td><span class="cell-id">{{ s.student_id }}</span></td>
+                                    <td><strong>{{ s.name }}</strong></td>
+                                    <td>{{ s.department }}</td>
+                                    <td><span class="sams-badge blue">Yr{{ s.year }} / {{ s.section }}</span></td>
+                                    <td>
+                                        <div class="sams-progress-wrap">
+                                            <div class="sams-progress-bar">
+                                                {% if pct >= 75 %}
+                                                    <div class="sams-progress-fill good" style="width:100%"></div>
+                                                {% elif pct >= 60 %}
+                                                    <div class="sams-progress-fill warn" style="width:100%"></div>
+                                                {% else %}
+                                                    <div class="sams-progress-fill danger" style="width:100%"></div>
+                                                {% endif %}
+                                            </div>
+                                            {% if pct >= 75 %}
+                                                <span class="sams-progress-pct good">{{ pct }}%</span>
+                                            {% elif pct >= 60 %}
+                                                <span class="sams-progress-pct warn">{{ pct }}%</span>
+                                            {% else %}
+                                                <span class="sams-progress-pct danger">{{ pct }}%</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="sams-btn blue" style="font-size:13px; padding:7px 13px;"
+                                            onclick="viewStudentDetails('{{ s.student_id }}','{{ s.name }}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;">No students found.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            {% elif active_tab == 'faculty' %}
+                <div class="sams-card">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas fa-chalkboard-teacher"></i> Faculty Members</h3>
+                        <div class="sams-card-actions">
+                            <button class="sams-btn green" onclick="document.getElementById('addFacultyModal').style.display='flex'">
+                                <i class="fas fa-plus"></i> Add Faculty
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sams-card-body">
+                        <table class="sams-table">
+                            <thead><tr>
+                                <th>Faculty ID</th><th>Name</th><th>Email</th>
+                                <th>Phone</th><th>Type</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody>
+                            {% for f in faculty_data %}
+                                {% if f.role and f.role|lower == 'accounts' %}
+                                    {% set is_accounts_role = true %}
+                                {% else %}
+                                    {% set is_accounts_role = false %}
+                                {% endif %}
+                                <tr>
+                                    <td><span class="cell-id">{{ f.faculty_id }}</span></td>
+                                    <td><strong>{{ f.name }}</strong></td>
+                                    <td><span class="cell-muted">{{ f.email }}</span></td>
+                                    <td><span class="cell-muted">{{ f.phone }}</span></td>
+                                    <td>
+                                        {% if is_accounts_role %}
+                                            <span class="sams-badge red"><i class="fas fa-coins"></i> Accounts</span>
+                                        {% else %}
+                                            <span class="sams-badge green"><i class="fas fa-book"></i> Academic</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="sams-action-cell">
+                                            <button class="sams-btn-icon orange"
+                                                title="{% if is_accounts_role %}Switch to Academic{% else %}Switch to Accounts{% endif %}"
+                                                data-fid="{{ f.faculty_id }}"
+                                                data-is-accounts="{% if is_accounts_role %}true{% else %}false{% endif %}"
+                                                onclick="toggleAccountsRole(this.dataset.fid, this.dataset.isAccounts === 'true')">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </button>
+                                            <form method="POST" style="display:inline;"
+                                                onsubmit="return confirm('Delete faculty member?')">
+                                                <input type="hidden" name="delete_faculty_id" value="{{ f.faculty_id }}">
+                                                <button type="submit" name="delete_faculty" class="sams-btn-icon red" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;">No faculty found.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Add Faculty Modal -->
+                <div id="addFacultyModal" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:18px; padding:28px; width:440px; max-width:94vw; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3 style="margin:0; font-size:17px; font-weight:800; color:#111827;">Add Faculty Member</h3>
+                            <button onclick="document.getElementById('addFacultyModal').style.display='none'" style="background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:18px; color:#6b7280; display:flex; align-items:center; justify-content:center;">&times;</button>
+                        </div>
+                        <form method="POST">
+                            <div style="margin-bottom:13px;"><label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:5px;">Faculty ID</label>
+                                <input type="text" name="faculty_id" required placeholder="e.g. FAC001" style="width:100%; padding:10px 13px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; box-sizing:border-box; outline:none;"></div>
+                            <div style="margin-bottom:13px;"><label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:5px;">Full Name</label>
+                                <input type="text" name="name" required placeholder="e.g. Dr. Ramesh Kumar" style="width:100%; padding:10px 13px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; box-sizing:border-box; outline:none;"></div>
+                            <div style="margin-bottom:13px;"><label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:5px;">Phone</label>
+                                <input type="text" name="phone" placeholder="e.g. 9876543210" style="width:100%; padding:10px 13px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; box-sizing:border-box; outline:none;"></div>
+                            <div style="margin-bottom:18px;"><label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:5px;">Faculty Type / Role</label>
+                                <select name="role" style="width:100%; padding:10px 13px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; box-sizing:border-box; outline:none;">
+                                    <option value="Academic">Academic Faculty</option>
+                                    <option value="Accounts">Accounts / Fee Faculty</option>
+                                </select></div>
+                            <button type="submit" name="add_faculty" class="sams-btn green" style="width:100%; justify-content:center; padding:11px;">
+                                <i class="fas fa-plus"></i> Add Faculty Member
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            {% elif active_tab == 'assignments' %}
+                <div class="sams-card">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas fa-tasks"></i> Subject Assignments</h3>
+                        <div class="sams-card-actions">
+                            <button class="sams-btn green" onclick="document.getElementById('addAssignModal').style.display='block'">
+                                <i class="fas fa-plus"></i> Add Assignment
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sams-card-body">
+                        <table class="sams-table">
+                            <thead><tr>
+                                <th>Faculty</th><th>Subject</th><th>Class</th>
+                                <th>Semester</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody>
+                            {% for a in assignments_data %}
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:700;">{{ a.f_name or a.faculty_name or a.faculty_id }}</div>
+                                        <div class="cell-muted">{{ a.faculty_id }}</div>
+                                    </td>
+                                    <td><strong>{{ a.subject_name }}</strong></td>
+                                    <td><span class="sams-badge blue">{{ a.department }} Yr{{ a.year }}-{{ a.section }}</span></td>
+                                    <td><span class="sams-badge gray">Sem {{ a.semester }}</span></td>
+                                    <td>
+                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this assignment?')">
+                                            <input type="hidden" name="delete_assignment_id" value="{{ a.assignment_id }}">
+                                            <button type="submit" name="delete_assignment" class="sams-btn-icon red" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="5" style="text-align:center;padding:40px;color:#9ca3af;">No assignments found.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            {% elif active_tab == 'attendance' %}
+                <div class="table-container">
+                    <h3 class="section-title">Attendance Records</h3>
+                    {% set tabName = 'attendance' %}
+{% include 'admin_filter.html' %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Semester</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in attendance_data %}
+                            <tr>
+                                <td>{{ r.student_id }}</td>
+                                <td>{{ r.name }}</td>
+                                <td>{{ r.attendance_date }}</td>
+                                <td>{{ r.class_name }}</td>
+                                <td><span class="badge {{ 'badge-present' if r.status=='Present' else 'badge-absent' }}">{{ r.status }}</span></td>
+                                <td>Sem {{ r.semester }}</td>
+                                <td>
+                                    <button class="btn" style="background:#22c55e; padding:5px 10px; font-size:12px; margin-right:6px;"
+                                        onclick="openAttendanceModal('{{ r.student_id }}','{{ r.attendance_date }}','{{ r.class_name }}','{{ r.semester }}','{{ r.status }}','{{ r.reason }}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this attendance record?')">
+                                        <input type="hidden" name="delete_attendance" value="1">
+                                        <input type="hidden" name="student_id" value="{{ r.student_id }}">
+                                        <input type="hidden" name="attendance_date" value="{{ r.attendance_date }}">
+                                        <input type="hidden" name="class_name" value="{{ r.class_name }}">
+                                        <input type="hidden" name="semester" value="{{ r.semester }}">
+                                        <button type="submit" class="btn" style="background:#ef4444; padding:5px 10px; font-size:12px;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" style="text-align:center;">No records found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% elif active_tab == 'exams' %}
+                <div class="table-container">
+                    <h3 class="section-title">Exam Results</h3>
+                    {% set tabName = 'exams' %}
+{% include 'admin_filter.html' %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Subject</th>
+                                <th>Exam Type</th>
+                                <th>External</th>
+                                <th>Internal</th>
+                                <th>Total</th>
+                                <th>Semester</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in exam_data %}
+                            <tr>
+                                <td>{{ r.student_id }}</td>
+                                <td>{{ r.s_name }}</td>
+                                <td>{{ r.subject_name }}</td>
+                                <td>{{ r.exam_type }}</td>
+                                <td>{{ r.internal_marks }}</td>
+                                <td>{{ r.external_marks }}</td>
+                                <td>{{ r.total_marks }}</td>
+                                <td>Sem {{ r.semester }}</td>
+                                <td>
+                                    <button class="btn" style="background:#22c55e; padding:5px 10px; font-size:12px; margin-right:6px;"
+                                        onclick="openExamModal('{{ r.student_id }}','{{ r.exam_type }}','{{ r.subject_name }}','{{ r.semester }}','{{ r.descriptive_marks }}','{{ r.objective_marks }}','{{ r.Assignment_marks }}','{{ r.ppt_marks }}','{{ r.total_marks }}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this exam record?')">
+                                        <input type="hidden" name="delete_exam" value="1">
+                                        <input type="hidden" name="student_id" value="{{ r.student_id }}">
+                                        <input type="hidden" name="exam_type" value="{{ r.exam_type }}">
+                                        <input type="hidden" name="subject_name" value="{{ r.subject_name }}">
+                                        <input type="hidden" name="semester" value="{{ r.semester }}">
+                                        <button type="submit" class="btn" style="background:#ef4444; padding:5px 10px; font-size:12px;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="8" style="text-align:center;">No records found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% elif active_tab == 'fees' %}
+                <div class="table-container">
+                    <h3 class="section-title">Tuition Fees</h3>
+                    {% set tabName = 'fees' %}
+{% include 'admin_filter.html' %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Total Fee</th>
+                                <th>Paid</th>
+                                <th>Remaining</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in fee_data %}
+                            <tr>
+                                <td>{{ f.student_id }}</td>
+                                <td>{{ f.s_name }}</td>
+                                <td>₹{{ "{:,.0f}".format(f.total_fee|float) }}</td>
+                                <td>₹{{ "{:,.0f}".format(f.paid_fee|float) }}</td>
+                                <td>₹{{ "{:,.0f}".format(f.remaining_fee|float) }}</td>
+                                <td><span class="badge {{ 'badge-paid' if f.payment_status=='Paid' else 'badge-pending' }}">{{ f.payment_status }}</span></td>
+                                <td>
+                                    <button class="btn" style="background:#27ae60; padding:5px 10px; font-size:12px; margin-right:6px;"
+                                        onclick="openFeeModal('{{ f.student_id }}','{{ f.s_name }}','{{ f.total_fee }}','{{ f.paid_fee }}','{{ f.payment_status }}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this fee record?')">
+                                        <input type="hidden" name="delete_fee" value="1">
+                                        <input type="hidden" name="student_id" value="{{ f.student_id }}">
+                                        <button type="submit" class="btn" style="background:#ef4444; padding:5px 10px; font-size:12px;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="7" style="text-align:center;">No fee records found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% elif active_tab == 'timetable' %}
+                <div class="table-container">
+                    <h3 class="section-title">Time Table Upload</h3>
+                    <form method="POST" enctype="multipart/form-data" style="margin-bottom:20px;">
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                            <div>
+                                <label>Department:</label><br>
+                                <select name="tt_dept" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                                    {% for d in ['CSE','CSD','CSM','AI&ML','ECE','EEE','MECH','CIVIL','MBA'] %}
+                                    <option value="{{ d }}">{{ d }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label>Year:</label><br>
+                                <select name="tt_year" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                                    {% for y in range(1,5) %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label>Section:</label><br>
+                                <select name="tt_section" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                                    {% for s in ['A','B','C','D','E','F','G'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label>Semester:</label><br>
+                                <select name="tt_semester" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                                    {% for sem in range(1,9) %}<option value="{{ sem }}">Sem {{ sem }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label>Image File:</label><br>
+                                <input type="file" name="tt_file" accept="image/*" required style="padding:6px;">
+                            </div>
+                            <button type="submit" name="upload_timetable" class="btn" style="background:#3498db; padding:9px 15px;">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </div>
+                    </form>
+                    {% if timetable_data %}
+                    <table>
+                        <thead>
+                            <tr><th>Dept</th><th>Year</th><th>Sec</th><th>Sem</th><th>File</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for tt in timetable_data %}
+                            <tr>
+                                <td>{{ tt.department }}</td>
+                                <td>{{ tt.year }}</td>
+                                <td>{{ tt.section }}</td>
+                                <td>{{ tt.semester }}</td>
+                                <td><a href="/uploads/{{ tt.file_path }}" target="_blank">View</a></td>
+                                <td>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Delete timetable?')">
+                                        <input type="hidden" name="delete_tt_id" value="{{ tt.id }}">
+                                        <button type="submit" name="delete_timetable" class="btn" style="background:#e74c3c; padding:5px 10px; font-size:12px;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+
+            {% elif active_tab == 'jntuh' %}
+                <div class="table-container" style="background:#090b10; border-radius:20px; padding:25px; color:#fff;">
+                    <h3 class="section-title" style="color:#38bdf8; margin-bottom:16px;">🎓 JNTUH Results Lookup</h3>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:24px; background:#181d2d; padding:18px; border-radius:14px; border:1px solid #242c42;">
+                        <div style="flex:1; min-width:200px;">
+                            <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Hallticket Number</label>
+                            <input type="text" id="admin-jntuh-roll" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid #2e3954; background:#0d1019; color:#fff; font-size:14px;" placeholder="e.g. 23U51A05A6" onkeyup="if(event.key==='Enter') adminFetchJntuhResult()">
+                        </div>
+                        <div style="width:180px;">
+                            <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Date of Birth (Optional)</label>
+                            <input type="text" id="admin-jntuh-dob" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid #2e3954; background:#0d1019; color:#fff; font-size:14px;" placeholder="YYYY/MM/DD">
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn" style="background:#38bdf8; color:#0b1220; font-weight:700; padding:12px 20px; border-radius:8px; border:none; cursor:pointer;" onclick="adminFetchJntuhResult(false)">
+                                🎓 Search Result
+                            </button>
+                            <button class="btn" style="background:#0284c7; color:#fff; font-weight:700; padding:12px 16px; border-radius:8px; border:none; cursor:pointer;" onclick="adminFetchJntuhResult(true)" title="Live scraper fetch">
+                                🔄 Live Scrape
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="admin-jntuh-loader" style="display:none; text-align:center; padding:30px;">
+                        <div style="width:40px; height:40px; border:4px solid #1e2638; border-top-color:#38bdf8; border-radius:50%; animation:spin 0.85s linear infinite; margin:0 auto 12px;"></div>
+                        <p style="color:#94a3b8; font-weight:600;">Fetching JNTUH Results...</p>
+                    </div>
+
+                    <!-- Results Output -->
+                    <div id="admin-jntuh-feature-output"></div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+<!-- Modals and JS below - kept unchanged -->
+<!-- Bulk Update Modal -->
+<div id="bulkUpdateModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:5% auto; padding:30px; border-radius:12px; width:600px; max-width:90%; max-height:80vh; overflow-y:auto;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="document.getElementById('bulkUpdateModal').style.display='none'">&times;</span>
+        <h3>Bulk Update Students</h3>
+        <form method="POST">
+            <input type="hidden" name="bulk_dept" value="{{ filter_dept }}">
+            <input type="hidden" name="bulk_year" value="{{ filter_year }}">
+            <input type="hidden" name="bulk_section" value="{{ filter_section }}">
+            <label>Move to Year:</label>
+            <select name="new_year" style="width:100%; padding:8px; margin:8px 0;">
+                {% for y in range(1,5) %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}
+            </select>
+            <label>Move to Section:</label>
+            <select name="new_section" style="width:100%; padding:8px; margin:8px 0;">
+                {% for s in ['A','B','C','D','E','F','G'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+            <button type="submit" name="bulk_update" class="btn" style="background:#f39c12; width:100%; padding:10px; margin-top:10px;">Apply Bulk Update</button>
+        </form>
+    </div>
+</div>
+
+<!-- Fee Edit Modal -->
+<div id="feeModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:10% auto; padding:30px; border-radius:12px; width:400px; max-width:90%;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="closeModal('feeModal')">&times;</span>
+        <h3>Edit Fee: <span id="feeStudentName"></span></h3>
+        <form method="POST">
+            <input type="hidden" name="student_id" id="feeStudentId">
+            <label>Total Fee (₹):</label>
+            <input type="number" name="total_fee" id="feeTotalInput" style="width:100%; padding:8px; margin:8px 0;" required>
+            <label>Paid Amount (₹):</label>
+            <input type="number" name="paid_fee" id="feePaidInput" style="width:100%; padding:8px; margin:8px 0;" required>
+            <label>Payment Status:</label>
+            <select name="payment_status" id="feeStatusInput" style="width:100%; padding:8px; margin:8px 0;">
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Partial">Partial</option>
+            </select>
+            <button type="submit" name="update_single_fee" class="btn" style="background:#27ae60; width:100%; padding:10px; margin-top:10px;">Update Fee</button>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Edit Modal -->
+<div id="attendanceModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:10% auto; padding:30px; border-radius:12px; width:420px; max-width:90%;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="closeModal('attendanceModal')">&times;</span>
+        <h3>Edit Attendance</h3>
+        <form method="POST">
+            <input type="hidden" name="student_id" id="attendanceStudentId">
+            <input type="hidden" name="attendance_date" id="attendanceDate">
+            <input type="hidden" name="class_name" id="attendanceClassName">
+            <input type="hidden" name="semester" id="attendanceSemester">
+            <label>Status:</label>
+            <select name="status" id="attendanceStatus" style="width:100%; padding:8px; margin:8px 0;">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+            </select>
+            <label>Reason (optional):</label>
+            <textarea name="reason" id="attendanceReason" style="width:100%; padding:8px; margin:8px 0; min-height:100px;"></textarea>
+            <button type="submit" name="update_single_attendance" class="btn" style="background:#27ae60; width:100%; padding:10px; margin-top:10px;">Save Attendance</button>
+        </form>
+    </div>
+</div>
+
+<!-- Exam Edit Modal -->
+<div id="examModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:10% auto; padding:30px; border-radius:12px; width:420px; max-width:90%;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="closeModal('examModal')">&times;</span>
+        <h3>Edit Exam Result</h3>
+        <form method="POST">
+            <input type="hidden" name="student_id" id="examStudentId">
+            <input type="hidden" name="exam_type" id="examType">
+            <input type="hidden" name="subject_name" id="examSubject">
+            <input type="hidden" name="semester" id="examSemester">
+            <label>Descriptive Marks:</label>
+            <input type="number" name="descriptive_marks" id="examDescriptive" style="width:100%; padding:8px; margin:8px 0;" min="0">
+            <label>Objective Marks:</label>
+            <input type="number" name="objective_marks" id="examObjective" style="width:100%; padding:8px; margin:8px 0;" min="0">
+            <label>Assignment Marks:</label>
+            <input type="number" name="Assignment_marks" id="examAssignment" style="width:100%; padding:8px; margin:8px 0;" min="0">
+            <label>PPT Marks:</label>
+            <input type="number" name="ppt_marks" id="examPpt" style="width:100%; padding:8px; margin:8px 0;" min="0">
+            <label>Total Marks:</label>
+            <input type="number" name="total_marks" id="examTotal" style="width:100%; padding:8px; margin:8px 0;" min="0">
+            <button type="submit" name="update_single_exam" class="btn" style="background:#27ae60; width:100%; padding:10px; margin-top:10px;">Save Exam</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Assignment Modal -->
+<div id="addAssignModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:5% auto; padding:30px; border-radius:12px; width:500px; max-width:90%; max-height:80vh; overflow-y:auto;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="document.getElementById('addAssignModal').style.display='none'">&times;</span>
+        <h3>Add Subject Assignment</h3>
+        <form method="POST">
+            <label>Faculty:</label>
+            <select name="assign_faculty_id" style="width:100%; padding:8px; margin:8px 0;" required>
+                <option value="">-- Select Faculty --</option>
+                {% for f in faculty_list %}
+                <option value="{{ f.faculty_id }}">{{ f.name }} ({{ f.faculty_id }})</option>
+                {% endfor %}
+            </select>
+            <label>Subject Name:</label>
+            <input type="text" name="assign_subject" style="width:100%; padding:8px; margin:8px 0;" required>
+            <label>Department:</label>
+            <select name="assign_dept" style="width:100%; padding:8px; margin:8px 0;" required>
+                {% for d in ['CSE','CSD','CSM','AI&ML','ECE','EEE','MECH','CIVIL','MBA'] %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+            </select>
+            <label>Year:</label>
+            <select name="assign_year" style="width:100%; padding:8px; margin:8px 0;" required>
+                {% for y in range(1,5) %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}
+            </select>
+            <label>Section:</label>
+            <select name="assign_section" style="width:100%; padding:8px; margin:8px 0;" required>
+                {% for s in ['A','B','C','D','E','F','G'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+            <label>Semester:</label>
+            <select name="assign_semester" style="width:100%; padding:8px; margin:8px 0;" required>
+                {% for sem in range(1,9) %}<option value="{{ sem }}">Sem {{ sem }}</option>{% endfor %}
+            </select>
+            <button type="submit" name="add_assignment" class="btn" style="background:#27ae60; width:100%; padding:10px; margin-top:10px;">Add Assignment</button>
+        </form>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div id="studentDetailsModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:white; margin:3% auto; padding:30px; border-radius:12px; width:800px; max-width:95%; max-height:90vh; overflow-y:auto;">
+        <span style="float:right; font-size:28px; cursor:pointer;" onclick="document.getElementById('studentDetailsModal').style.display='none'">&times;</span>
+        <h3 id="modalStudentTitle">Student Details</h3>
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event,'attendanceTab')">Attendance</button>
+            <button class="tablinks" onclick="openTab(event,'examsTab')">Exam Results</button>
+            <button class="tablinks" onclick="openTab(event,'summaryTab'); renderSummaryTab();">📄 Summary Report</button>
+        </div>
+        <div id="attendanceTab" class="tabcontent" style="display:block;">
+            <table style="min-width:unset;">
+                <thead><tr><th>Date</th><th>Subject</th><th>Status</th><th>Semester</th></tr></thead>
+                <tbody id="modalAttendance"></tbody>
+            </table>
+        </div>
+        <div id="examsTab" class="tabcontent">
+            <table style="min-width:unset;">
+                <thead><tr><th>Subject</th><th>Type</th><th>Internal</th><th>External</th><th>Total</th><th>Sem</th></tr></thead>
+                <tbody id="modalExams"></tbody>
+            </table>
+        </div>
+        <div id="summaryTab" class="tabcontent">
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openFeeModal(sid, name, total, paid, status) {
+    document.getElementById('feeStudentId').value = sid;
+    document.getElementById('feeStudentName').textContent = name;
+    document.getElementById('feeTotalInput').value = total;
+    document.getElementById('feePaidInput').value = paid;
+    document.getElementById('feeStatusInput').value = status;
+    document.getElementById('feeModal').style.display = 'block';
+}
+function toggleAccountsRole(fid, isAccounts) {
+    if (confirm('Toggle accounts role for ' + fid + '?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = '<input name="toggle_accounts_faculty_id" value="' + fid + '">';
+        form.innerHTML += '<input name="toggle_accounts" value="' + (isAccounts ? '1' : '0') + '">';
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+function openAttendanceModal(sid, date, className, semester, status, reason) {
+    document.getElementById('attendanceStudentId').value = sid;
+    document.getElementById('attendanceDate').value = date;
+    document.getElementById('attendanceClassName').value = className;
+    document.getElementById('attendanceSemester').value = semester;
+    document.getElementById('attendanceStatus').value = status;
+    document.getElementById('attendanceReason').value = reason;
+    document.getElementById('attendanceModal').style.display = 'block';
+}
+function openExamModal(sid, examType, subject, semester, descriptive, objective, assignment, ppt, total) {
+    document.getElementById('examStudentId').value = sid;
+    document.getElementById('examType').value = examType;
+    document.getElementById('examSubject').value = subject;
+    document.getElementById('examSemester').value = semester;
+    document.getElementById('examDescriptive').value = descriptive || 0;
+    document.getElementById('examObjective').value = objective || 0;
+    document.getElementById('examAssignment').value = assignment || 0;
+    document.getElementById('examPpt').value = ppt || 0;
+    document.getElementById('examTotal').value = total || 0;
+    document.getElementById('examModal').style.display = 'block';
+}
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+function openTab(evt, tabName) {
+    document.querySelectorAll('.tabcontent').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tablinks').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabName).style.display = 'block';
+    evt.currentTarget.classList.add('active');
+}
+function viewStudentDetails(sid, name) {
+    document.getElementById('modalStudentTitle').textContent = name + ' (' + sid + ')';
+    fetch('/admin_student_details?student_id=' + sid)
+        .then(r => r.json())
+        .then(data => {
+            let attHTML = '';
+            (data.attendance || []).forEach(r => {
+                attHTML += '<tr><td>' + r.attendance_date + '</td><td>' + r.class_name + '</td><td style="color:' + (r.status=='Present'?'green':'red') + '">' + r.status + '</td><td>Sem ' + r.semester + '</td></tr>';
+            });
+            document.getElementById('modalAttendance').innerHTML = attHTML || '<tr><td colspan="4">No records</td></tr>';
+            let exHTML = '';
+            (data.exams || []).forEach(r => {
+                exHTML += '<tr><td>' + r.subject_name + '</td><td>' + r.exam_type + '</td><td>' + r.internal_marks + '</td><td>' + r.external_marks + '</td><td>' + r.total_marks + '</td><td>Sem ' + r.semester + '</td></tr>';
+            });
+            document.getElementById('modalExams').innerHTML = exHTML || '<tr><td colspan="6">No records</td></tr>';
+            window._modalData = data;
+        });
+    document.getElementById('studentDetailsModal').style.display = 'block';
+    document.querySelectorAll('.tabcontent').forEach(el => el.style.display = 'none');
+    document.getElementById('attendanceTab').style.display = 'block';
+    document.querySelectorAll('.tablinks').forEach(el => el.classList.remove('active'));
+    document.querySelector('.tablinks').classList.add('active');
+}
+function renderSummaryTab() {
+    const data = window._modalData;
+    if (!data) return;
+    const total = (data.attendance||[]).length;
+    const present = (data.attendance||[]).filter(r=>r.status=='Present').length;
+    const pct = total ? Math.round(present/total*100) : 0;
+    let html = '<div class="summary-box"><div class="summary-item"><span>Total Classes</span><span>' + total + '</span></div><div class="summary-item"><span>Present</span><span>' + present + '</span></div><div class="summary-item"><span>Absent</span><span>' + (total-present) + '</span></div><div class="summary-item"><span>Attendance %</span><span style="color:' + (pct>=75?'green':'red') + '">' + pct + '%</span></div></div>';
+    html += '<h4>Exam Results</h4><table class="marks-table"><thead><tr><th>Subject</th><th>Type</th><th>Internal</th><th>External</th><th>Total</th><th>Sem</th></tr></thead><tbody>';
+    (data.exams||[]).forEach(r => { html += '<tr><td>' + r.subject_name + '</td><td>' + r.exam_type + '</td><td>' + r.internal_marks + '</td><td>' + r.external_marks + '</td><td>' + r.total_marks + '</td><td>Sem ' + r.semester + '</td></tr>'; });
+    html += '</tbody></table>';
+    document.getElementById('summaryContent').innerHTML = html;
+}
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+}
+function filterTable(tbodyId, query) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const q = query.toLowerCase().trim();
+    Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+}
+
+let adminCachedJntuhData = null;
+
+function getSemNotation(sem) {
+    const m = {1: '1-1', 2: '1-2', 3: '2-1', 4: '2-2', 5: '3-1', 6: '3-2', 7: '4-1', 8: '4-2'};
+    return m[sem] || ('Sem ' + sem);
+}
+
+function getCollegeName(roll) {
+    return 'DRK College of Engineering and Technology';
+}
+
+function getBranchFullName(roll, dept) {
+    const d = (dept || '').trim().toUpperCase();
+    if (d === 'CSE') return 'Computer Science & Engineering';
+    if (d === 'CSD') return 'Computer Science & Engineering (Data Science)';
+    if (d === 'CSM') return 'Computer Science & Engineering (AI & ML)';
+    if (d === 'ECE') return 'Electronics & Communication Engineering';
+    if (d === 'EEE') return 'Electrical & Electronics Engineering';
+    if (d === 'MECH') return 'Mechanical Engineering';
+    if (d === 'CIVIL') return 'Civil Engineering';
+
+    const r = (roll || '').toUpperCase();
+    if (r.includes('A05') || r.includes('1A05')) return 'Computer Science & Engineering';
+    if (r.includes('A66') || r.includes('1A66')) return 'Computer Science & Engineering (Data Science)';
+    if (r.includes('A67') || r.includes('1A67')) return 'Computer Science & Engineering (AI & ML)';
+    if (r.includes('A04') || r.includes('1A04')) return 'Electronics & Communication Engineering';
+    if (r.includes('A02') || r.includes('1A02')) return 'Electrical & Electronics Engineering';
+    if (r.includes('A03') || r.includes('1A03')) return 'Mechanical Engineering';
+    if (r.includes('A01') || r.includes('1A01')) return 'Civil Engineering';
+    return 'Computer Science & Engineering';
+}
+
+function getActiveBacklogs(semResults) {
+    if (!semResults || !semResults.length) return [];
+    const subjectMap = {};
+    semResults.forEach(sem => {
+        (sem.subjects || []).forEach(s => {
+            const code = (s.code || '').trim().toUpperCase();
+            const name = (s.name || '').trim().toUpperCase();
+            const key  = code || name;
+            if (!key) return;
+            const isPassed = Boolean(s.passed) || (s.grade && !['F', 'AB', 'ABSENT', 'W', '-', ''].includes(s.grade.toUpperCase().trim()));
+            if (!subjectMap[key]) {
+                subjectMap[key] = { cleared: false, lastAttempt: null };
+            }
+            if (isPassed) {
+                subjectMap[key].cleared = true;
+            } else if (!subjectMap[key].cleared) {
+                subjectMap[key].lastAttempt = {
+                    semester: sem.semester,
+                    code: s.code || code,
+                    name: s.name || name,
+                    grade: s.grade,
+                    credits: s.credits
+                };
+            }
+        });
+    });
+    const activeBacklogs = [];
+    Object.keys(subjectMap).forEach(key => {
+        const item = subjectMap[key];
+        if (!item.cleared && item.lastAttempt) {
+            activeBacklogs.push(item.lastAttempt);
+        }
+    });
+    return activeBacklogs;
+}
+
+/* ─── Deduplicate and MERGE semester attempts ─────────────────────────
+   JNTUH returns multiple rows for the same semester number when a student
+   appeared in supplementary exams. We merge all subjects across attempts:
+   For each subject, we keep the passed attempt or the best attempt.
+   ─────────────────────────────────────────────────────────────────────── */
+function adminGetBestSemResults(results) {
+    const semMap = {};
+    (results || []).forEach(function(sem) {
+        const semKey = String(sem.semester);
+        if (!semMap[semKey]) {
+            semMap[semKey] = Object.assign({}, sem, { subjects: [], _subjMap: {} });
+        }
+        
+        const currentSem = semMap[semKey];
+        const typeRaw = (sem.type || '').trim().toLowerCase();
+        if (typeRaw === 'regular' || typeRaw === '') {
+            currentSem.type = sem.type;
+            currentSem.examCode = sem.examCode;
+        }
+
+        (sem.subjects || []).forEach(function(sub) {
+            const code = (sub.code || '').trim().toUpperCase();
+            const name = (sub.name || '').trim().toUpperCase();
+            const subKey = code || name;
+            if (!subKey) return;
+
+            if (!currentSem._subjMap[subKey]) {
+                currentSem._subjMap[subKey] = Object.assign({}, sub);
+            } else {
+                const prev = currentSem._subjMap[subKey];
+                const curPassed = sub.passed;
+                const prevPassed = prev.passed;
+                
+                if (curPassed && !prevPassed) {
+                    currentSem._subjMap[subKey] = Object.assign({}, sub);
+                } else if (curPassed === prevPassed) {
+                    const curPts = sub.points || 0;
+                    const prevPts = prev.points || 0;
+                    if (curPts > prevPts) {
+                        currentSem._subjMap[subKey] = Object.assign({}, sub);
+                    }
+                }
+            }
+        });
+    });
+
+    const mergedResults = [];
+    Object.keys(semMap).sort(function(a,b){return Number(a)-Number(b);}).forEach(function(k) {
+        const semObj = semMap[k];
+        semObj.subjects = Object.values(semObj._subjMap);
+        delete semObj._subjMap;
+        
+        let totalCreds = 0;
+        let totalPts = 0;
+        semObj.subjects.forEach(function(s) {
+            if (s.credits > 0) {
+                totalCreds += s.credits;
+                totalPts += s.credits * (s.points || 0);
+            }
+        });
+        semObj.sgpa = totalCreds > 0 ? (totalPts / totalCreds) : 0;
+        semObj.totalCredits = totalCreds;
+        mergedResults.push(semObj);
+    });
+
+    return mergedResults;
+}
+
+function renderRefStudentCard(student, idxNum, activeSubTab) {
+    const roll = student.student_id || student.roll || '';
+    const name = (student.name || student.student_name || roll || '').toUpperCase();
+    const college = getCollegeName(roll);
+    const branch = getBranchFullName(roll, student.department);
+
+    let sResults = student.results || [];
+    if (typeof sResults === 'string') {
+        try { sResults = JSON.parse(sResults); } catch(e) { sResults = []; }
+    }
+    sResults = adminGetBestSemResults(sResults);
+
+    
+    let calculatedCgpa = 0;
+    if (sResults.length > 0) {
+        let totalCgpaCredits = 0;
+        let totalCgpaPoints = 0;
+        sResults.forEach(sem => {
+            (sem.subjects || []).forEach(sub => {
+                if (sub.passed && sub.credits > 0) {
+                    totalCgpaCredits += sub.credits;
+                    totalCgpaPoints += (sub.credits * (sub.points || 0));
+                }
+            });
+        });
+        if (totalCgpaCredits > 0) {
+            calculatedCgpa = (totalCgpaPoints / totalCgpaCredits).toFixed(2);
+        } else {
+            calculatedCgpa = '--';
+        }
+    } else {
+        calculatedCgpa = '--';
+    }
+    const cgpaVal = (student.cgpa !== undefined && student.cgpa !== null && student.cgpa > 0) 
+        ? student.cgpa.toFixed(2) 
+        : calculatedCgpa;
+        const totalCredits = student.totalCredits !== undefined ? student.totalCredits : sResults.reduce((acc, sem) => acc + (sem.totalCredits || 0), 0);
+    const backlogsCount = student.backlogsCount !== undefined ? student.backlogsCount : getActiveBacklogs(sResults).length;
+    const semCount = sResults.length;
+
+    const currentTab = activeSubTab || 'academic';
+
+    let html = `
+    <div class="jntuh-mobile-container">
+        <!-- Top Bar Header -->
+        <div class="res-top-bar">
+            <div class="res-title-group">
+                <button class="res-back-btn" onclick="const o=document.getElementById('admin-jntuh-feature-output'); if(o) o.innerHTML='';" title="Back">&larr;</button>
+                <h2>Student Result ${idxNum ? '(' + idxNum + ')' : ''}</h2>
+            </div>
+        </div>
+
+        <!-- Student Profile Card -->
+        <div class="res-profile-card">
+            <div class="res-profile-top">
+                <div class="res-student-info">
+                    <div class="res-student-name">${name}</div>
+                    <div class="res-roll-number">${roll}</div>
+                    <div class="res-branch-name">${branch}</div>
+                    <div class="res-college-name">${college}</div>
+                </div>
+                <div class="res-cgpa-ring-wrapper">
+                    <div class="res-cgpa-ring">
+                        <div class="res-cgpa-val">${cgpaVal}</div>
+                        <div class="res-cgpa-lbl">CGPA</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Stat Boxes -->
+            <div class="res-stats-grid">
+                <div class="res-stat-box">
+                    <div class="res-stat-num">${totalCredits}</div>
+                    <div class="res-stat-lbl">Credits</div>
+                </div>
+                <div class="res-stat-box">
+                    <div class="res-stat-num">${backlogsCount}</div>
+                    <div class="res-stat-lbl">Backlogs</div>
+                </div>
+                <div class="res-stat-box">
+                    <div class="res-stat-num">${semCount}</div>
+                    <div class="res-stat-lbl">Semesters</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub Nav Filter Pills -->
+        <div class="res-tabs-container">
+            <div class="res-tab-pills-bar">
+                <button class="res-tab-btn ${currentTab === 'all' ? 'active' : ''}" onclick="adminSwitchSubResultTab('${roll}', 'all')">All Results</button>
+                <button class="res-tab-btn ${currentTab === 'academic' ? 'active' : ''}" onclick="adminSwitchSubResultTab('${roll}', 'academic')">Academic</button>
+                <button class="res-tab-btn ${currentTab === 'backlogs' ? 'active' : ''}" onclick="adminSwitchSubResultTab('${roll}', 'backlogs')">Backlogs</button>
+                <button class="res-tab-btn ${currentTab === 'credits' ? 'active' : ''}" onclick="adminSwitchSubResultTab('${roll}', 'credits')">Credits</button>
+            </div>
+            <div class="res-sub-heading">Your consolidated best attempt and semester performance.</div>
+        </div>`;
+
+    if (currentTab === 'backlogs') {
+        const backlogs = getActiveBacklogs(sResults);
+        if (backlogs.length === 0) {
+            html += `<div class="res-sem-card" style="padding:28px; text-align:center;">
+                <div style="font-size:36px; margin-bottom:8px;">🎉</div>
+                <h4 style="color:#34d399; margin:0 0 4px;">Zero Active Backlogs</h4>
+                <p style="color:#94a3b8; font-size:13px; margin:0;">All subjects cleared successfully!</p>
+            </div>`;
+        } else {
+            backlogs.forEach(b => {
+                html += `
+                <div class="res-sem-card" style="padding:16px 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div class="res-subj-code">SEMESTER ${b.semester} · ${b.code}</div>
+                            <div class="res-subj-name">${b.name}</div>
+                        </div>
+                        <div class="res-grade-pill grade-f">${b.grade || 'F'}</div>
+                    </div>
+                </div>`;
+            });
+        }
+    } else if (currentTab === 'credits') {
+        const degreeTarget = 160;
+        const pct = Math.min(100, Math.round((totalCredits / degreeTarget) * 100));
+        html += `
+        <div class="res-sem-card" style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <span style="font-weight:700; color:#fff;">Total Degree Credits</span>
+                <span style="font-weight:800; color:#38bdf8;">${totalCredits} / ${degreeTarget} (${pct}%)</span>
+            </div>
+            <div style="background:#0d1019; height:10px; border-radius:10px; overflow:hidden;">
+                <div style="width:${pct}%; background:#38bdf8; height:100%;"></div>
+            </div>
+        </div>`;
+    } else {
+        // Academic & All Results
+        if (sResults && sResults.length) {
+            sResults.forEach((sem, idx) => {
+                const semNotation = getSemNotation(sem.semester);
+                const sgpaVal = (sem.sgpa || 0).toFixed(2);
+                const subList = sem.subjects || [];
+                const totalSemCredits = sem.totalCredits !== undefined ? sem.totalCredits : subList.reduce((a, c) => a + (c.credits || 0), 0);
+
+                html += `
+                <div class="res-sem-card" id="admin-sem-card-${idx}">
+                    <div class="res-sem-header" onclick="document.getElementById('admin-sem-card-${idx}').classList.toggle('collapsed')">
+                        <div>
+                            <div class="res-sem-title">Semester ${semNotation}</div>
+                            <div class="res-sem-meta">${totalSemCredits} credits &middot; ${subList.length} subjects</div>
+                        </div>
+                        <div class="res-sem-right-badge">
+                            <div class="res-sgpa-badge">SGPA <span>${sgpaVal}</span></div>
+                            <div class="res-chevron">&#9650;</div>
+                        </div>
+                    </div>
+
+                    <div class="res-subject-list">`;
+
+                subList.forEach(s => {
+                    const internal = s.internal !== undefined && s.internal !== '' ? s.internal : '—';
+                    const external = s.external !== undefined && s.external !== '' ? s.external : '—';
+                    let totalVal = '—';
+                    if (internal !== '—' && external !== '—' && !isNaN(parseFloat(internal)) && !isNaN(parseFloat(external))) {
+                        totalVal = (parseFloat(internal) + parseFloat(external)).toFixed(0);
+                    } else if (internal !== '—' && !isNaN(parseFloat(internal))) {
+                        totalVal = parseFloat(internal).toFixed(0);
+                    } else if (external !== '—' && !isNaN(parseFloat(external))) {
+                        totalVal = parseFloat(external).toFixed(0);
+                    }
+
+                    const gradeStr = (s.grade || '-').trim().toUpperCase();
+                    let gradeClass = 'grade-a';
+                    if (gradeStr === 'O' || gradeStr === '10') gradeClass = 'grade-o';
+                    else if (gradeStr === 'A+' || gradeStr === '9') gradeClass = 'grade-a-plus';
+                    else if (gradeStr === 'A' || gradeStr === '8') gradeClass = 'grade-a';
+                    else if (gradeStr === 'B+' || gradeStr === '7') gradeClass = 'grade-b-plus';
+                    else if (gradeStr === 'B' || gradeStr === '6') gradeClass = 'grade-b';
+                    else if (gradeStr === 'C' || gradeStr === '5') gradeClass = 'grade-c';
+                    else if (gradeStr === 'F' || gradeStr === 'AB' || gradeStr === 'ABSENT' || !s.passed) gradeClass = 'grade-f';
+
+                    html += `
+                        <div class="res-subject-item">
+                            <div class="res-subj-left">
+                                <div class="res-subj-code">${s.code || '-'}</div>
+                                <div class="res-subj-name">${s.name || 'SUBJECT'}</div>
+                                <div class="res-subj-marks">Int ${internal} &middot; Ext ${external} &middot; Total ${totalVal}</div>
+                            </div>
+                            <div class="res-subj-right">
+                                <div class="res-grade-pill ${gradeClass}">${s.grade || '-'}</div>
+                                <div class="res-credit-val">${s.credits !== undefined ? s.credits : '-'} cr</div>
+                            </div>
+                        </div>`;
+                });
+
+                html += `</div></div>`;
+            });
+        } else {
+            html += `<div class="res-sem-card" style="padding:24px; text-align:center; color:#94a3b8;">No semester results available.</div>`;
+        }
+    }
+
+    html += `</div>`;
+    return html;
+}
+
+function adminSwitchSubResultTab(roll, tabName) {
+    if (adminCachedJntuhData) {
+        const output = document.getElementById('admin-jntuh-feature-output');
+        if (output) {
+            output.innerHTML = renderRefStudentCard(adminCachedJntuhData, '', tabName);
+        }
+    }
+}
+
+function adminFetchJntuhResult(forceLive) {
+    const rollElem = document.getElementById('admin-jntuh-roll');
+    const dobElem = document.getElementById('admin-jntuh-dob');
+    const roll = rollElem ? rollElem.value.trim().toUpperCase() : '';
+    const dob = dobElem ? dobElem.value.trim() : '';
+
+    if (!roll) {
+        alert('Please enter a valid JNTUH Hallticket Number (e.g. 23U51A05A6)');
+        return;
+    }
+
+    const loader = document.getElementById('admin-jntuh-loader');
+    const output = document.getElementById('admin-jntuh-feature-output');
+
+    if (loader) loader.style.display = 'block';
+    if (output) output.innerHTML = '';
+
+    const form = new FormData();
+    form.append('roll', roll);
+    if (dob) form.append('dob', dob);
+    if (forceLive) form.append('force_live', 'true');
+
+    fetch('/jntuh_results', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+            if (loader) loader.style.display = 'none';
+            if (data.error || data.dob_required) {
+                output.innerHTML = `<div style="padding:20px; text-align:center; background:#181d2d; border-radius:12px; color:#ef4444;">${data.error || 'Date of Birth required for live fetch.'}</div>`;
+                return;
+            }
+            adminCachedJntuhData = data;
+            output.innerHTML = renderRefStudentCard(data, '', 'academic');
+        })
+        .catch(err => {
+            if (loader) loader.style.display = 'none';
+            output.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444;">Error connecting to server.</div>`;
+        });
+}
+</script>
+
+</body>
+</html>

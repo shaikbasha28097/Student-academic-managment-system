@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+*.log
+*.png
+uploads/
+rendered_dashboard.html
+faculty_script_rendered.js
+output*.txt
+temp_cgpa.txt
+jntuh_probe.html
+debug_*.py
+extract*.py
+find_*.py
+script_*.js
+scratch/

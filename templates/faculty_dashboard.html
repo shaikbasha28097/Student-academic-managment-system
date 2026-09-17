@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Faculty Dashboard – SAMS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <meta name="description" content="Faculty portal for managing attendance, marks and students at DRK SAMS">
+    
+<style>
+        /* ── Use shared SAMS design system from styles.css ── */
+        body {
+            font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+            background: #f0f4f8;
+            margin: 0; padding: 0;
+            display: flex;
+            min-height: 100vh;
+            color: #111827;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 200;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 18px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-brand .brand-icon {
+            width: 38px; height: 38px;
+            background: #3b82f6; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: #fff; flex-shrink: 0;
+        }
+        .sidebar-brand .brand-text { line-height: 1.3; }
+        .sidebar-brand .brand-name { font-size: 15px; font-weight: 800; color: #fff; }
+        .sidebar-brand .brand-sub  { font-size: 11px; color: #64748b; font-weight: 500; }
+
+        .sidebar a {
+            display: flex; align-items: center; gap: 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 13px 18px;
+            font-size: 14px; font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.18s;
+        }
+        .sidebar a i { width: 18px; font-size: 15px; text-align: center; flex-shrink: 0; }
+        .sidebar a:hover { background: #334155; color: #fff; }
+        .sidebar a.active {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+            border-right: 3px solid #3b82f6;
+            font-weight: 700;
+        }
+        .sidebar-section-label {
+            font-size: 10px; font-weight: 700; color: #475569;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 12px 18px 4px 18px;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+        }
+
+        /* ── Top Header ── */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 28px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .header h1 { margin: 0; font-size: 19px; font-weight: 700; color: #111827; }
+        .header .user-info {
+            display: flex; align-items: center; gap: 14px;
+            font-size: 14px; color: #374151;
+        }
+        .header .user-chip {
+            display: flex; align-items: center; gap: 7px;
+            background: #f1f5f9; border: 1px solid #e5e7eb;
+            border-radius: 100px; padding: 6px 14px;
+            font-weight: 600;
+        }
+        .header .user-chip i { color: #3b82f6; }
+        .header .logout-btn {
+            background: #ef4444; color: white;
+            text-decoration: none; padding: 8px 16px;
+            border-radius: 9px; font-weight: 700; font-size: 14px;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .header .logout-btn:hover { background: #dc2626; }
+
+        /* ── Content Area ── */
+        .content { padding: 26px; flex: 1; overflow-x: auto; }
+
+        .dashboard-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+        }
+        .dashboard-title h1 {
+            margin: 0; font-size: 22px; font-weight: 800; color: #111827;
+        }
+        .dashboard-title p {
+            margin: 4px 0 0; color: #64748b; font-size: 14px;
+        }
+        .dashboard-user-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 999px;
+            padding: 8px 12px; font-weight: 700; color: #111827; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        /* ── Card wrapper ── */
+        .sams-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+        .sams-card-header {
+            padding: 18px 22px;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .sams-card-title {
+            font-size: 17px; font-weight: 700; color: #111827;
+            display: flex; align-items: center; gap: 10px; margin: 0;
+        }
+        .sams-card-title i { color: #3b82f6; font-size: 16px; }
+        .sams-card-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+        .sams-card-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* ── Filter Bar ── */
+        .sams-filter-bar {
+            padding: 14px 22px;
+            display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
+        }
+        .sams-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 340px; }
+        .sams-search-wrap i {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: #9ca3af; font-size: 13px;
+        }
+        .sams-search-input {
+            width: 100%; padding: 9px 12px 9px 36px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #111827;
+            background: #fff; outline: none; box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .sams-search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        .sams-select {
+            padding: 9px 12px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #374151;
+            background: #fff; outline: none; cursor: pointer; min-width: 130px;
+        }
+        .sams-select:focus { border-color: #3b82f6; }
+
+        /* ── THE TABLE ── */
+        .sams-table {
+            width: 100%; border-collapse: collapse;
+            font-family: inherit; min-width: 560px;
+        }
+        .sams-table thead tr {
+            background: #f8fafc;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .sams-table th {
+            padding: 13px 18px;
+            font-size: 13px; font-weight: 700;
+            color: #374151; text-align: left;
+            white-space: nowrap;
+        }
+        .sams-table td {
+            padding: 14px 18px;
+            font-size: 14px; font-weight: 500;
+            color: #111827;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .sams-table tbody tr:hover { background: #f8fafc; }
+        .sams-table tbody tr:last-child td { border-bottom: none; }
+        .cell-id { font-size: 13px; font-weight: 700; color: #3b82f6; font-family: 'Courier New',monospace; }
+        .cell-muted { color: #6b7280; font-size: 13px; }
+        .cell-center { text-align: center; }
+
+        /* ── Badges ── */
+        .sams-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 11px; border-radius: 100px;
+            font-size: 12px; font-weight: 700; white-space: nowrap;
+        }
+        .sams-badge.green  { background: rgba(34,197,94,0.12);  color: #16a34a; }
+        .sams-badge.red    { background: rgba(239,68,68,0.12);   color: #dc2626; }
+        .sams-badge.blue   { background: rgba(59,130,246,0.12);  color: #2563eb; }
+        .sams-badge.orange { background: rgba(245,158,11,0.12);  color: #d97706; }
+        .sams-badge.purple { background: rgba(139,92,246,0.12);  color: #7c3aed; }
+        .sams-badge.teal   { background: rgba(20,184,166,0.12);  color: #0f766e; }
+        .sams-badge.gray   { background: rgba(107,114,128,0.12); color: #4b5563; }
+
+        /* Legacy badges (keep working) */
+        .badge-present { background: rgba(34,197,94,0.12); color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-absent  { background: rgba(239,68,68,0.12);  color: #dc2626; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-accounts { background: rgba(239,68,68,0.12); color: #dc2626; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-academic { background: rgba(34,197,94,0.12); color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-paid    { background: rgba(34,197,94,0.12);  color: #16a34a; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge-pending { background: rgba(245,158,11,0.12); color: #d97706; border-radius: 100px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+
+        /* ── Action Buttons ── */
+        .sams-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px; border: none;
+            cursor: pointer; font-family: inherit; font-size: 13px;
+            font-weight: 600; text-decoration: none;
+            transition: all 0.18s; white-space: nowrap;
+        }
+        .sams-btn:hover { opacity: 0.87; transform: translateY(-1px); }
+        .sams-btn.blue   { background: #3b82f6; color: #fff; }
+        .sams-btn.green  { background: #22c55e; color: #fff; }
+        .sams-btn.red    { background: #ef4444; color: #fff; }
+        .sams-btn.orange { background: #f59e0b; color: #fff; }
+        .sams-btn.teal   { background: #14b8a6; color: #fff; }
+        .sams-btn.gray   { background: #e5e7eb; color: #374151; }
+
+        .sams-btn-icon {
+            width: 32px; height: 32px; border-radius: 8px; border: none;
+            cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; transition: all 0.18s;
+        }
+        .sams-btn-icon.blue   { background: rgba(59,130,246,0.12);  color: #2563eb; }
+        .sams-btn-icon.red    { background: rgba(239,68,68,0.12);    color: #dc2626; }
+        .sams-btn-icon.green  { background: rgba(34,197,94,0.12);    color: #16a34a; }
+        .sams-btn-icon.orange { background: rgba(245,158,11,0.12);   color: #d97706; }
+        .sams-btn-icon:hover { filter: brightness(0.88); transform: scale(1.08); }
+
+        .sams-action-cell { display: flex; align-items: center; gap: 6px; }
+
+        /* ── Progress Bar ── */
+        .sams-progress-wrap { display: flex; align-items: center; gap: 10px; }
+        .sams-progress-bar { height: 7px; flex: 1; background: #e5e7eb; border-radius: 100px; overflow: hidden; min-width: 60px; }
+        .sams-progress-fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
+        .sams-progress-fill.good   { background: #22c55e; }
+        .sams-progress-fill.warn   { background: #f59e0b; }
+        .sams-progress-fill.danger { background: #ef4444; }
+        .sams-progress-pct { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; }
+        .sams-progress-pct.good   { color: #16a34a; }
+        .sams-progress-pct.warn   { color: #d97706; }
+        .sams-progress-pct.danger { color: #dc2626; }
+
+        /* ── Pagination ── */
+        .sams-pagination {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 22px; border-top: 1px solid #f1f5f9;
+            flex-wrap: wrap; gap: 10px; background: #fafbfc;
+        }
+        .sams-pagination-info { font-size: 13px; color: #6b7280; font-weight: 500; }
+        .sams-page-btns { display: flex; align-items: center; gap: 4px; }
+        .sams-page-btn {
+            width: 32px; height: 32px;
+            border: 1.5px solid #e5e7eb; border-radius: 8px;
+            background: #fff; color: #374151;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.18s; font-family: inherit;
+        }
+        .sams-page-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+        .sams-page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+        .sams-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── ID Tags ── */
+        .sams-id-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(34,197,94,0.1); color: #15803d;
+            border: 1px solid rgba(34,197,94,0.3); border-radius: 100px;
+            padding: 5px 12px; font-size: 13px; font-weight: 700; margin: 3px 3px;
+        }
+        .sams-id-tag a { color: #dc2626; text-decoration: none; font-weight: 900; font-size: 15px; line-height: 1; }
+        .sams-id-tag a:hover { opacity: 0.7; }
+
+        /* ── Alert / Message ── */
+        .sams-alert {
+            padding: 12px 18px; border-radius: 12px;
+            font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .sams-alert.success { background: rgba(34,197,94,0.1);  color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
+        .sams-alert.error   { background: rgba(239,68,68,0.1);   color: #b91c1c; border: 1px solid rgba(239,68,68,0.25); }
+        .sams-alert.info    { background: rgba(59,130,246,0.1);  color: #1d4ed8; border: 1px solid rgba(59,130,246,0.25); }
+        .sams-alert.warning { background: rgba(245,158,11,0.1);  color: #92400e; border: 1px solid rgba(245,158,11,0.25); }
+
+        /* ── Stats Row ── */
+        .sams-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 22px;
+        }
+        .sams-stat-card {
+            background: #fff; border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .sams-stat-icon {
+            width: 46px; height: 46px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .sams-stat-icon.blue   { background: rgba(59,130,246,0.12);  color: #3b82f6; }
+        .sams-stat-icon.green  { background: rgba(34,197,94,0.12);   color: #22c55e; }
+        .sams-stat-icon.red    { background: rgba(239,68,68,0.12);    color: #ef4444; }
+        .sams-stat-icon.orange { background: rgba(245,158,11,0.12);   color: #f59e0b; }
+        .sams-stat-icon.purple { background: rgba(139,92,246,0.12);   color: #8b5cf6; }
+        .sams-stat-icon.teal   { background: rgba(20,184,166,0.12);   color: #14b8a6; }
+        .sams-stat-val { font-size: 24px; font-weight: 800; color: #111827; line-height: 1.1; }
+        .sams-stat-lbl { font-size: 12.5px; font-weight: 500; color: #6b7280; margin-top: 2px; }
+
+        /* ── Modals (legacy + new) ── */
+        .modal-overlay, [id$="Modal"]:not(div > [id$="Modal"]) {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-box, .modal-content-box {
+            background: #fff; border-radius: 18px;
+            padding: 28px; width: 480px;
+            max-width: 94vw; max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-title { font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-family: inherit; font-size: 14px; color: #111827;
+            background: #fff; outline: none; box-sizing: border-box;
+        }
+        .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        /* Legacy compatibility */
+        .section-title { margin: 0 0 18px 0; color: #111827; font-size: 20px; font-weight: 700; }
+        .selection-box {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+            padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            flex-wrap: wrap;
+        }
+        .section-header {
+            font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 14px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            flex-wrap: wrap;
+        }
+        .info-bar {
+            background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px;
+            align-items: center; justify-content: space-between; flex-wrap: wrap;
+        }
+        .bulk-panel, .profile-card {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+            padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .search-input, .form-input, .input-small {
+            border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 9px 12px; font-family: inherit;
+            font-size: 14px; color: #111827; background: #fff; outline: none; box-sizing: border-box;
+        }
+        .search-input:focus, .form-input:focus, .input-small:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .input-small { width: 90px; }
+        .toggle-btn {
+            border: none; border-radius: 999px; padding: 8px 12px; font-weight: 700; cursor: pointer;
+            background: #e2e8f0; color: #334155;
+        }
+        .toggle-btn.toggle-present { background: #dcfce7; color: #166534; }
+        .toggle-btn.toggle-absent { background: #fee2e2; color: #991b1b; }
+        .profile-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+        .profile-label { font-weight: 700; color: #374151; }
+        .profile-value { color: #111827; }
+        .profile-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+        .table-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); margin-bottom: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 560px; }
+        th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #374151; font-weight: 700; font-size: 13px; border-bottom: 2px solid #e5e7eb; }
+        tr:hover { background: #f8fafc; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 9px; border: none;
+            cursor: pointer; font-family: inherit; font-size: 13px;
+            font-weight: 600; color: #fff; transition: all 0.18s;
+        }
+        .btn:hover { opacity: 0.87; transform: translateY(-1px); }
+        .btn.btn-blue   { background: #3b82f6; }
+        .btn.btn-teal   { background: #14b8a6; }
+        .btn.btn-orange { background: #f59e0b; }
+        .btn.btn-red    { background: #ef4444; }
+        .btn.btn-green  { background: #22c55e; }
+
+        /* ── Hamburger Button ── */
+        .hamburger {
+            display: none; position: fixed; top: 12px; left: 12px;
+            z-index: 1100; background: #1e293b; color: #fff;
+            border: none; border-radius: 9px; width: 42px; height: 42px;
+            font-size: 20px; cursor: pointer;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 900;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .sidebar { transform: translateX(-100%); z-index: 1000; width: 270px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; width: 100% !important; }
+            .content { padding: 14px; padding-top: 68px; }
+            .header { padding: 0 14px; }
+            .header h1 { font-size: 16px; }
+            .sams-stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .sams-filter-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .sams-search-wrap { max-width: 100%; }
+            .sams-select { width: 100%; }
+            table { min-width: 500px; font-size: 13px; }
+            th, td { padding: 10px 12px; }
+            .sams-table th, .sams-table td { padding: 10px 13px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .sams-stats-row { grid-template-columns: 1fr 1fr; gap: 9px; }
+            .sams-stat-card { padding: 14px; gap: 10px; }
+            .sams-stat-val { font-size: 20px; }
+        }
+
+        /* ── Performance detail tabs ── */
+        .tab { overflow: hidden; border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px 10px 0 0; }
+        .tab button { background: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #374151; transition: 0.2s; }
+        .tab button:hover { background: #e5e7eb; }
+        .tab button.active { background: #fff; color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tabcontent { display: none; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+        .summary-box { background: #f8fafc; padding: 14px; border-radius: 10px; margin-bottom: 18px; }
+        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; font-size: 14px; }
+        .marks-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+        .marks-table th { background: #1e293b; color: #fff; padding: 10px 14px; font-size: 13px; text-align: left; }
+        .marks-table td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .jntuh-memo-container { max-width: none; }
+        #fac-jntuh-feature-output,
+        #fac-jntuh-feature-output .jntuh-memo-container {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="sams-layout">
+
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="brand-name">SAMS Faculty Portal</div>
+        <div class="brand-sub">Faculty Dashboard</div>
+    </div>
+    <a href="#" class="" id="btn-mystudents" onclick="showSection('mystudents');closeSidebar();">My Students</a>
+    {% if is_accounts %}
+    <a href="#" class="" id="btn-tuition" onclick="showSection('tuition');closeSidebar();">Tuition Fee</a>
+    <a href="#" class="" id="btn-performance" onclick="showSection('performance');closeSidebar();">Performance</a>
+    <a href="#" class="" id="btn-overall_attendance" onclick="showSection('overall_attendance');closeSidebar();">Overall Attendance</a>
+    {% endif %}
+    {% if not is_accounts %}
+    <a href="#" class="" id="btn-performance" onclick="showSection('performance');closeSidebar();">Performance</a>
+    <a href="#" class="" id="btn-attendance" onclick="showSection('attendance');closeSidebar();">Attendance</a>
+    <a href="#" class="" id="btn-overall_attendance" onclick="showSection('overall_attendance');closeSidebar();">Overall Attendance</a>
+    <a href="#" class="" id="btn-exam" onclick="showSection('exam');closeSidebar();">Exam Marks</a>
+    <a href="#" class="" id="btn-timetable" onclick="showSection('timetable');closeSidebar();">Time Table</a>
+    <a href="#" class="" id="btn-material" onclick="showSection('material');closeSidebar();">Course Material</a>
+    <a href="#" class="" id="btn-calendar" onclick="showSection('calendar');closeSidebar();">Academic Calendar</a>
+    {% endif %}
+    <a href="#" class="" id="btn-profile" onclick="showSection('profile');closeSidebar();">My Profile</a>
+    <a href="#" class="" id="btn-jntuh" onclick="showSection('jntuh');closeSidebar();">JNTUH Results</a>
+    <a href="/logout" class="" style="background:#c0392b;margin-top:20px;">Logout</a>
+</div>
+
+<div class="main-content">
+    <div class="content">
+        <div class="dashboard-topbar">
+        <div class="dashboard-title">
+            <h1>Faculty Dashboard</h1>
+            <p>Manage students, attendance, marks, fees and class resources</p>
+        </div>
+        <div class="dashboard-user-chip">
+            <i class="fas fa-user-tie"></i>
+            <span>{{ faculty.name or faculty.faculty_id }}</span>
+        </div>
+    </div>
+    <div class="selection-box" id="selectionBox">
+        <form method="GET" id="filterForm">
+            <input type="hidden" name="active_section" id="active_section_input" value="{{ active }}">
+            {% if is_accounts %}
+            <strong>Filter Students:</strong>
+            {% for field, label, opts in [('department','Dept',[('CSE','CSE'),('CSD','CSD'),('CSM','CSM'),('AI&ML','AI&ML'),('ECE','ECE'),('EEE','EEE'),('MECH','MECH'),('CIVIL','CIVIL'),('MBA','MBA')]),('year','Year',[('1','1st Year'),('2','2nd Year'),('3','3rd Year'),('4','4th Year')]),('section','Sec',[('A','A'),('B','B'),('C','C'),('D','D'),('E','E'),('F','F'),('G','G')])] %}
+            <select name="{{ field }}" onchange="this.form.submit()">{% for val, lbl in opts %}<option value="{{ val }}" {{ 'selected' if (loop.first and not request.args.get(field)) or request.args.get(field)==val else '' }}>{{ lbl }}</option>{% endfor %}</select>
+            {% endfor %}
+            <input type="text" name="search_student_id" id="search_student_id" placeholder="Search ID" value="{{ search_sid }}">
+            <button type="submit" class="btn btn-blue">Search</button>
+            {% else %}
+                {% if assignments %}
+                <strong>Class:</strong>
+                <select name="assignment_id" onchange="this.form.submit()">{% for a in assignments %}<option value="{{ a.assignment_id }}" {{ 'selected' if sel_assign == a.assignment_id|string else '' }}>{{ a.department }} - Yr {{ a.year }}, Sec {{ a.section }} | {{ a.subject_name }}</option>{% endfor %}</select>
+                {% else %}
+                <strong>Filter Class:</strong>
+                <select name="department" onchange="this.form.submit()">{% for d in ['CSE','CSD','CSM','AI&ML','ECE','EEE','MECH','CIVIL','MBA'] %}<option value="{{ d }}" {{ 'selected' if dept==d else '' }}>{{ d }}</option>{% endfor %}</select>
+                <select name="year" onchange="this.form.submit()">{% for y, lbl in [('1','1st Year'),('2','2nd Year'),('3','3rd Year'),('4','4th Year')] %}<option value="{{ y }}" {{ 'selected' if year==y else '' }}>{{ lbl }}</option>{% endfor %}</select>
+                <select name="section" onchange="this.form.submit()">{% for s in ['A','B','C','D','E','F','G'] %}<option value="{{ s }}" {{ 'selected' if section==s else '' }}>Section {{ s }}</option>{% endfor %}</select>
+                {% endif %}
+            {% endif %}
+        </form>
+    </div>
+    <div id="contentArea"></div>
+</div>
+
+<script id="faculty-data" type="application/json">
+{
+  "studentList": {{ filtered_students | tojson | safe }},
+  "overallStudents": {{ overall_students | tojson | safe }},
+  "facultyInfo": {{ faculty | tojson | safe }},
+  "assignments": {{ assignments | tojson | safe }},
+  "isAccounts": {{ is_accounts | tojson | safe }},
+  "currentFilter": {
+    "dept": {{ dept | tojson | safe }},
+    "year": {{ year | tojson | safe }},
+    "sec": {{ section | tojson | safe }},
+    "sem": {{ cur_sem | tojson | safe }},
+    "subj": {{ subject_name | tojson | safe }},
+    "assign_id": {{ sel_assign | tojson | safe }}
+  },
+  "examMarksData": {{ exam_marks | tojson | safe }},
+  "feeDataMap": {{ fee_data | tojson | safe }},
+  "uploadedFiles": {{ uploaded_files | tojson | safe }},
+  "examTypeFilter": {{ exam_type_filter | tojson | safe }}
+}
+</script>
+<script src="/static/ux.js"></script>
+<script>
+const facultyData = JSON.parse(document.getElementById('faculty-data').textContent);
+const studentList      = facultyData.studentList;
+const overallStudents  = facultyData.overallStudents;
+const facultyInfo      = facultyData.facultyInfo;
+const assignments      = facultyData.assignments;
+const isAccounts       = facultyData.isAccounts;
+const currentFilter    = facultyData.currentFilter;
+const examMarksData    = facultyData.examMarksData;
+const feeDataMap       = facultyData.feeDataMap;
+const uploadedFiles    = facultyData.uploadedFiles;
+const examTypeFilter   = facultyData.examTypeFilter;
+let currentStudentData = null;
+
+function toggleSidebar() { 
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    if (!sb) return;
+    sb.classList.toggle('open');
+    if (ov) ov.classList.toggle('active');
+}
+function closeSidebar() { 
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    if (!sb) return;
+    sb.classList.remove('open');
+    if (ov) ov.classList.remove('active');
+}
+
+function renderSectionCard(title, actionsHtml, bodyHtml) {
+    return `
+        <div class="sams-card">
+            <div class="sams-card-header">
+                <h3 class="sams-card-title"><i class="fas fa-layer-group"></i> ${title}</h3>
+                <div class="sams-card-actions">${actionsHtml || ''}</div>
+            </div>
+            <div class="sams-card-body">${bodyHtml}</div>
+        </div>`;
+}
+
+function filterTable(inputId, tableId) {
+    const input = document.getElementById(inputId).value.toUpperCase();
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach(row => {
+        row.style.display = row.innerText.toUpperCase().includes(input) ? "" : "none";
+    });
+}
+
+function togglePasswordVisibility(fieldId) {
+    const f = document.getElementById(fieldId);
+    if (f) f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+// ── CSV Download from table ───────────────────────────────────
+function downloadCSV(tableId, filename) {
+    let csv = [], rows = document.querySelectorAll(`#${tableId} tr`);
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll("td, th");
+        for (let j = 0; j < cols.length; j++) {
+            let input = cols[j].querySelector('input'), sel = cols[j].querySelector('select');
+            let data  = input ? input.value : sel ? sel.options[sel.selectedIndex].text : cols[j].innerText;
+            row.push('"' + data.replace(/"/g, '""') + '"');
+        }
+        csv.push(row.join(","));
+    }
+    let blob = new Blob([csv.join("\n")], {type:"text/csv"});
+    let a = document.createElement("a");
+    a.download = filename; a.href = URL.createObjectURL(blob); a.style.display = "none";
+    document.body.appendChild(a); a.click();
+}
+
+// ── Performance search ────────────────────────────────────────
+function filterPerformanceTable() {
+    const input = document.getElementById("studentSearchInput").value.toUpperCase();
+    document.querySelectorAll("#performanceTableBody tr").forEach(row => {
+        if (row.cells.length > 1) {
+            row.style.display = (row.cells[0].innerText.toUpperCase().includes(input) ||
+                                 row.cells[1].innerText.toUpperCase().includes(input)) ? "" : "none";
+        }
+    });
+}
+
+// ── Profile toggle ────────────────────────────────────────────
+function toggleProfileForm(showEdit) {
+    document.getElementById('profileView').style.display = showEdit ? 'none' : 'block';
+    document.getElementById('profileEdit').style.display = showEdit ? 'block' : 'none';
+}
+
+// ── Bulk Edit Panel Toggle ────────────────────────────────────
+function toggleBulkEdit() {
+    const panel = document.getElementById('bulkEditPanel');
+    if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── Show section ──────────────────────────────────────────────
+function showSection(section) {
+    const activeInput = document.getElementById("active_section_input");
+    const content = document.getElementById("contentArea");
+    const selBox  = document.getElementById("selectionBox");
+    if (activeInput) activeInput.value = section;
+
+    document.querySelectorAll('.sidebar a[id^="btn-"]').forEach(btn => btn.classList.remove('active'));
+    const b = document.getElementById("btn-" + section);
+    if (b) b.classList.add("active");
+
+    if (!content) return;
+    if (selBox) {
+        selBox.style.display = (section === "profile" || section === "performance") ? "none" : "block";
+    }
+
+    if (section === "mystudents") {
+        content.innerHTML = `
+        <div class="section-header">Student List &amp; Management</div>
+        <div class="info-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <div>Showing: <strong>${currentFilter.dept}</strong> | Year: <strong>${currentFilter.year}</strong> | Section: <strong>${currentFilter.sec}</strong></div>
+            <button type="button" class="btn btn-orange" onclick="toggleBulkEdit()">⚡ Bulk Update (Year/Sec)</button>
+        </div>
+
+        <div id="bulkEditPanel" class="bulk-panel">
+            <h4>Bulk Update Students (For Filtered List)</h4>
+            <form method="POST" style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                <input type="hidden" name="department" value="${currentFilter.dept}">
+                <input type="hidden" name="year"       value="${currentFilter.year}">
+                <input type="hidden" name="section"    value="${currentFilter.sec}">
+                <div>
+                    <label>New Year: </label>
+                    <select name="bulk_year" style="padding:6px; border-radius:4px;">
+                        <option value="">-- Keep Current --</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div>
+                    <label>New Section: </label>
+                    <select name="bulk_section" style="padding:6px; border-radius:4px;">
+                        <option value="">-- Keep Current --</option>
+                        <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                        <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+                        <option value="G">G</option>
+                    </select>
+                </div>
+                <button type="submit" name="bulk_update" class="btn btn-teal" onclick="return confirm('Apply bulk update to all students in this filter?')">Apply Bulk Update</button>
+            </form>
+        </div>
+
+        <div class="table-container"><table>
+            <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Year</th><th>Sec</th><th>Phone</th><th>Actions</th></tr></thead>
+            <tbody>${studentList.length > 0 ? studentList.map(s => `
+            <tr>
+                <td><b><a href="#" onclick="openStudentModal('${s.student_id}','${s.name.replace(/'/g, "\\'")}'); return false;" style="color:#3498db; text-decoration:underline;">${s.student_id}</a></b></td>
+                <td>${s.name}</td><td>${s.department}</td><td>${s.year}</td><td>${s.section}</td><td>${s.phone||'N/A'}</td>
+                <td>
+                    <button class="btn btn-blue" onclick='openEditModal(${JSON.stringify(s)})'>✎ Edit</button>
+                    <a href="/faculty_dashboard?delete_student=${s.student_id}&department=${currentFilter.dept}&year=${currentFilter.year}&section=${currentFilter.sec}&active_section=mystudents"
+                       onclick="return confirm('Delete this student?')" class="btn btn-red">✖ Del</a>
+                </td>
+            </tr>`).join('') : '<tr><td colspan="7">No students found.</td></tr>'}
+            </tbody>
+        </table></div>`;
+        content.innerHTML = renderSectionCard('Student List & Management', '<button type="button" class="sams-btn orange" onclick="toggleBulkEdit()"><i class="fas fa-bolt"></i> Bulk Update</button>', content.innerHTML);
+
+    } else if (section === "profile") {
+        content.innerHTML = `
+        <div class="section-header">My Profile</div>
+        <div id="profileView">
+            <div class="profile-card">
+                <div class="profile-row"><span class="profile-label">Name:</span><span class="profile-value">${facultyInfo.name||''}</span></div>
+                <div class="profile-row"><span class="profile-label">Faculty ID:</span><span class="profile-value">${facultyInfo.faculty_id||''}</span></div>
+                <div class="profile-row"><span class="profile-label">Email:</span><span class="profile-value">${facultyInfo.email||''}</span></div>
+                <div class="profile-row"><span class="profile-label">Phone:</span><span class="profile-value">${facultyInfo.phone||'N/A'}</span></div>
+                <div class="profile-actions">
+                    <button class="btn btn-blue" onclick="toggleProfileForm(true)">Edit Profile</button>
+                </div>
+            </div>
+        </div>
+        <div id="profileEdit" style="display:none;">
+            <div class="profile-card">
+                <form method="post">
+                    <input type="hidden" name="active_section" value="profile">
+                    <div class="profile-row"><span class="profile-label">Name:</span>
+                        <input type="text" name="f_name" value="${facultyInfo.name||''}" required style="width:250px;"></div>
+                    <div class="profile-row"><span class="profile-label">Email:</span>
+                        <input type="email" name="f_email" value="${facultyInfo.email||''}" required style="width:250px;"></div>
+                    <div class="profile-row"><span class="profile-label">Phone:</span>
+                        <input type="text" name="f_phone" value="${facultyInfo.phone||''}" style="width:250px;"></div>
+                    <div class="profile-row"><span class="profile-label">New Password:</span>
+                        <div style="display:flex; align-items:center;">
+                            <input type="password" name="f_pass" id="profile_password" placeholder="Leave blank to keep" style="width:250px;">
+                            <span onclick="togglePasswordVisibility('profile_password')" style="cursor:pointer; margin-left:5px;">👁️</span>
+                        </div></div>
+                    <div class="profile-actions">
+                        <button class="btn btn-blue" name="update_profile">Save Changes</button>
+                        <button type="button" class="btn btn-orange" onclick="toggleProfileForm(false)">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>`;
+        content.innerHTML = renderSectionCard('My Profile', '', content.innerHTML);
+
+    } else if (section === "performance") {
+        const rows = studentList.map(s => `
+            <tr><td>${s.student_id}</td><td>${s.name}</td>
+            <td><button class="btn btn-teal" onclick="openStudentModal('${s.student_id}','${s.name.replace(/'/g, "\\'")}')">View Report</button></td></tr>`).join('');
+        content.innerHTML = `
+        <div class="section-header">Student Performance Reports</div>
+        <input type="text" id="studentSearchInput" class="search-input" onkeyup="filterPerformanceTable()" placeholder="Search by ID or Name...">
+        <div class="table-container"><table>
+            <thead><tr><th>Student ID</th><th>Name</th><th>Action</th></tr></thead>
+            <tbody id="performanceTableBody">${rows || '<tr><td colspan="3">No students found.</td></tr>'}</tbody>
+        </table></div>`;
+        content.innerHTML = renderSectionCard('Student Performance Reports', '', content.innerHTML);
+
+    } else if (section === "attendance") {
+        const today = new Date().toISOString().split('T')[0];
+        const rowsHtml = studentList.map(s => `
+            <tr><td>${s.student_id}</td><td>${s.name}</td>
+            <td><input type="hidden" name="status[${s.student_id}]" id="status_${s.student_id}" value="Present">
+                <button type="button" id="btn_${s.student_id}" class="toggle-btn toggle-present"
+                    onclick="toggleAttendance('${s.student_id}')">Present</button>
+            </td></tr>`).join('');
+        content.innerHTML = `
+        <div class="section-header">Mark Attendance</div>
+        <form method="POST">
+            <input type="hidden" name="att_dept" value="${currentFilter.dept}">
+            <input type="hidden" name="att_year" value="${currentFilter.year}">
+            <input type="hidden" name="att_sec"  value="${currentFilter.sec}">
+            <input type="hidden" name="semester" value="${currentFilter.sem}">
+            <div class="info-bar" style="display:flex; gap:15px; flex-wrap:wrap; align-items:center;">
+                <div><strong>Date:</strong> <input type="date" name="att_date" id="att_date" value="${today}" required></div>
+                <div><strong>Subject:</strong> <input type="text" name="class_name" id="class_name" value="${currentFilter.subj}" readonly style="background:#eee; border:1px solid #ccc; padding:5px 10px; border-radius:4px;"></div>
+                <div><strong>Semester:</strong> <span style="background:#eee; padding:5px 10px; border-radius:4px; display:inline-block; border:1px solid #ccc;">${currentFilter.sem}</span></div>
+                <input type="hidden" name="att_semester" id="att_semester" value="${currentFilter.sem}">
+                <button type="button" class="btn btn-blue" onclick="loadAttendance()">Load Attendance by Date</button>
+            </div>
+            <div class="table-container">
+                <table><tr><th>ID</th><th>Name</th><th>Status</th></tr>${rowsHtml}</table>
+            </div><br>
+            <button type="submit" name="save_attendance_action" class="btn btn-teal">Save Attendance</button>
+        </form>`;
+        content.innerHTML = renderSectionCard('Mark Attendance', '', content.innerHTML);
+
+    } else if (section === "overall_attendance") {
+        content.innerHTML = `
+        <div class="section-header">Overall Attendance Report</div>
+        <button class="btn btn-green" onclick="downloadCSV('overallTable','attendance_report.csv')">Download CSV</button>
+        <div class="table-container"><table id="overallTable">
+            <tr><th>ID</th><th>Name</th><th>Total</th><th>Present</th><th>Absent</th><th>%</th></tr>
+            ${overallStudents.map(s => `
+            <tr>
+                <td><a href="#" onclick="openStudentModal('${s.student_id}','${s.name.replace(/'/g, "\\'")}'); return false;" style="color:#3498db; text-decoration:underline;">${s.student_id}</a></td>
+                <td>${s.name}</td><td>${s.total_classes||0}</td><td>${s.present_count||0}</td><td>${s.absent_count||0}</td>
+                <td style="color:${(s.attendance_percent||0)<75?'red':'green'}"><b>${s.attendance_percent||0}%</b></td>
+            </tr>`).join('')}
+        </table></div>`;
+        content.innerHTML = renderSectionCard('Overall Attendance Report', '<button class="sams-btn green" onclick="downloadCSV(\'overallTable\',\'attendance_report.csv\')"><i class="fas fa-download"></i> Export CSV</button>', content.innerHTML);
+
+    } else if (section === "exam") {
+        let examRows = '';
+        studentList.forEach(s => {
+            const marks   = examMarksData[s.student_id] || {};
+            const frozen  = Object.keys(marks).length > 0;
+            const ro      = frozen ? 'readonly style="background-color:#e9ecef; cursor:not-allowed;"' : '';
+            examRows += `
+            <tr>
+                <td>${s.student_id}</td><td>${s.name}</td>
+                <td><input id="desc_${s.student_id}" name="marks[${s.student_id}][descriptive]" type="number" class="input-small" value="${marks.descriptive_marks||''}" placeholder="0-20" ${ro} oninput="calcTotal('${s.student_id}')"></td>
+                <td><input id="obj_${s.student_id}"  name="marks[${s.student_id}][objective]"   type="number" class="input-small" value="${marks.objective_marks||''}"  placeholder="0-10" ${ro} oninput="calcTotal('${s.student_id}')"></td>
+                <td><input id="ass_${s.student_id}"  name="marks[${s.student_id}][assignment]"  type="number" class="input-small" value="${marks.Assignment_marks||''}" placeholder="0-5"  ${ro} oninput="calcTotal('${s.student_id}')"></td>
+                <td><input id="ppt_${s.student_id}"  name="marks[${s.student_id}][ppt]"         type="number" class="input-small" value="${marks.ppt_marks||''}"        placeholder="0-5"  ${ro} oninput="calcTotal('${s.student_id}')"></td>
+                <td><input id="tot_${s.student_id}"  name="marks[${s.student_id}][total]"       type="number" class="input-small" value="${marks.total_marks||''}"       readonly style="background:#e9ecef;"></td>
+            </tr>`;
+        });
+        content.innerHTML = `
+        <div class="section-header">Exam Result Entry</div>
+        <div class="info-bar">
+            <form method="GET" style="display:flex; gap:15px; flex-wrap:wrap; align-items:center;">
+                <input type="hidden" name="active_section" value="exam">
+                <input type="hidden" name="assignment_id" value="${currentFilter.assign_id}">
+                <div><strong>Exam:</strong>
+                    <select name="exam_type">
+                        <option value="mid1" ${examTypeFilter=='mid1'?'selected':''}>Mid 1</option>
+                        <option value="mid2" ${examTypeFilter=='mid2'?'selected':''}>Mid 2</option>
+                        <option value="lab internal" ${examTypeFilter=='lab internal'?'selected':''}>Lab Internal</option>
+                        <option value="lab external" ${examTypeFilter=='lab external'?'selected':''}>Lab External</option>
+                    </select>
+                </div>
+                <div><strong>Subject:</strong> <span style="background:#eee; padding:5px 10px; border-radius:4px;">${currentFilter.subj}</span></div>
+                <div><strong>Semester:</strong> <span style="background:#eee; padding:5px 10px; border-radius:4px;">${currentFilter.sem}</span></div>
+                <button type="submit" class="btn btn-blue">Load Marks</button>
+            </form>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="ex_dept" value="${currentFilter.dept}">
+            <input type="hidden" name="ex_year" value="${currentFilter.year}">
+            <input type="hidden" name="ex_sec"  value="${currentFilter.sec}">
+            <input type="hidden" name="exam_type"    value="${examTypeFilter}">
+            <input type="hidden" name="subject_name" value="${currentFilter.subj}">
+            <input type="hidden" name="semester"     value="${currentFilter.sem}">
+            <div class="table-container"><table id="examTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Descriptive</th><th>Objective</th><th>Assignment</th><th>PPT</th><th>Total</th></tr></thead>
+                <tbody>${examRows || '<tr><td colspan="7">No students found.</td></tr>'}</tbody>
+            </table></div><br>
+            <button type="submit" name="save_exam_action" class="btn btn-blue">Update Marks</button>
+        </form>`;
+        content.innerHTML = renderSectionCard('Exam Result Entry', '', content.innerHTML);
+
+    } else if (section === "tuition") {
+        let feeRows = '';
+        studentList.forEach(s => {
+            const fee    = feeDataMap[s.student_id] || {};
+            const frozen = Object.keys(fee).length > 0;
+            const ro     = frozen ? 'readonly style="background-color:#e9ecef; cursor:not-allowed;"' : '';
+            feeRows += `
+            <tr>
+                <td><a href="#" onclick="openStudentModal('${s.student_id}','${s.name.replace(/'/g, "\\'")}'); return false;" style="color:#3498db; text-decoration:underline;">${s.student_id}</a>
+                    <input type="hidden" name="fees[${s.student_id}][name]" value="${s.name}"></td>
+                <td>${s.name}</td>
+                <td><input id="fee_tot_${s.student_id}" name="fees[${s.student_id}][total]"     class="input-small" value="${fee.total_fee||'0'}" ${ro} oninput="calcFee('${s.student_id}')"></td>
+                <td><input id="fee_oth_${s.student_id}" name="fees[${s.student_id}][other_free]" class="input-small" value="${fee.other_free||'0'}" ${ro} oninput="calcFee('${s.student_id}')"></td>
+                <td><input id="fee_pd_${s.student_id}"  name="fees[${s.student_id}][paid]"      class="input-small" value="${fee.paid_fee||'0'}"   oninput="calcFee('${s.student_id}')"></td>
+                <td><input id="fee_rem_${s.student_id}" class="input-small" value="${fee.remaining_fee||'0'}" readonly style="background:#e9ecef;"></td>
+                <td><select id="fee_stat_${s.student_id}" name="fees[${s.student_id}][status]">
+                    <option value="Partial" ${fee.payment_status=='Partial'?'selected':''}>Partial</option>
+                    <option value="Paid"    ${fee.payment_status=='Paid'?'selected':''}>Paid</option>
+                    <option value="Pending" ${(!fee.payment_status||fee.payment_status=='Pending')?'selected':''}>Pending</option>
+                </select></td>
+                <td><button type="button" class="btn btn-blue" onclick="saveSingleFee('${s.student_id}', '${s.name.replace(/'/g, "\\'")}')">Submit</button></td>
+            </tr>`;
+        });
+
+        content.innerHTML = `
+        <div class="section-header">Tuition Fee Management</div>
+        <button class="btn btn-green" onclick="downloadCSV('feeTable', 'tuition_fees.csv')">Download CSV</button>
+        <form method="POST">
+            <div class="table-container">
+                <table id="feeTable">
+                    <thead><tr><th>ID</th><th>Name</th><th>Total Fee</th><th>Other fee</th><th>Paid</th><th>Remaining fee</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>${feeRows || '<tr><td colspan="8">No fee records found.</td></tr>'}</tbody>
+                </table>
+            </div><br>
+            <button type="submit" name="save_fee_action" class="btn btn-teal">Update Fee Records</button>
+        </form>`;
+        content.innerHTML = renderSectionCard('Tuition Fee Management', '<button class="sams-btn green" onclick="downloadCSV(\'feeTable\',\'tuition_fees.csv\')"><i class="fas fa-download"></i> Export CSV</button>', content.innerHTML);
+
+    } else if (section === "jntuh") { // Updated JNTUH result UI as per redesign
+        content.innerHTML = `
+        <div class="jntuh-dark-container" style="background:#090b10; border-radius:20px; padding:35px 30px; color:#ffffff; font-family:'Inter',sans-serif; margin-bottom:30px;">
+            <!-- Header Pill Badge matching design -->
+            <div style="background:#dcdfe4; color:#111827; font-weight:600; font-size:15px; padding:10px 32px; border-radius:8px; text-align:center; max-width:max-content; margin:0 auto 32px auto;">
+                Jawaharlal Nehru Technological University, Hyderabad
+            </div>
+
+            <!-- 4-Box Navigation Grid -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:22px; margin-bottom:30px;">
+                <div class="jntuh-nav-card active" id="fac-card-box-1" onclick="facSwitchJntuhBox(1)">
+                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Academic Result &rarr;</div>
+                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Access overall student academic performance with hallticket number.</div>
+                </div>
+                <div class="jntuh-nav-card" id="fac-card-box-2" onclick="facSwitchJntuhBox(2)">
+                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Credit Checker &rarr;</div>
+                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Check credits required for promotion to next year or graduation.</div>
+                </div>
+                <div class="jntuh-nav-card" id="fac-card-box-7" onclick="facSwitchJntuhBox(7)">
+                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Semester Wise Result &rarr;</div>
+                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Check semester-wise SGPA, total marks, credits, and Regular/Supplementary status.</div>
+                </div>
+                <div class="jntuh-nav-card" id="fac-card-box-5" onclick="facSwitchJntuhBox(5)">
+                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Backlog Report &rarr;</div>
+                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Inspect detailed failed/backlog subjects report for a student.</div>
+                </div>
+                <div class="jntuh-nav-card" id="fac-card-box-6" onclick="facSwitchJntuhBox(6)">
+                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Class Results &rarr;</div>
+                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">View class performance summary, average CGPA and ranking leaderboard.</div>
+                </div>
+            </div>
+
+            <!-- Feature Panel -->
+            <div style="background:#111522; border-radius:16px; padding:28px; border:1px solid #1e2638;">
+                <div id="fac-jntuh-input-bar" style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:24px; background:#181d2d; padding:20px; border-radius:12px; border:1px solid #242c42;">
+                    <div style="flex:1; min-width:180px;">
+                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Hallticket Number</label>
+                        <input type="text" id="fac-jntuh-roll" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid #2e3954; background:#0d1019; color:#fff; font-size:14px;" placeholder="e.g. 21DR1A0501">
+                    </div>
+                    <div style="width:170px;">
+                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Date of Birth (Optional)</label>
+                        <input type="text" id="fac-jntuh-dob" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid #2e3954; background:#0d1019; color:#fff; font-size:14px;" placeholder="YYYY/MM/DD">
+                    </div>
+                    <div style="width:170px;">
+                        <label style="display:block; font-size:12px; color:#38bdf8; font-weight:600; margin-bottom:6px;">Choose Semester</label>
+                        <select id="fac-jntuh-sem-select" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid #2e3954; background:#0d1019; color:#fff; font-size:14px; cursor:pointer;" onchange="facOnSemesterFilterChange(this.value)">
+                            <option value="all">All Semesters (1-8)</option>
+                            <option value="1">1st Sem (1-1)</option>
+                            <option value="2">2nd Sem (1-2)</option>
+                            <option value="3">3rd Sem (2-1)</option>
+                            <option value="4">4th Sem (2-2)</option>
+                            <option value="5">5th Sem (3-1)</option>
+                            <option value="6">6th Sem (3-2)</option>
+                            <option value="7">7th Sem (4-1)</option>
+                            <option value="8">8th Sem (4-2)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:8px;">
+                        <button id="fac-jntuh-action-btn" style="padding:12px 24px; background:#38bdf8; color:#0b1220; font-weight:700; font-size:14px; border:none; border-radius:8px; cursor:pointer;" onclick="facExecuteCurrentFeature(false)">
+                            🎓 Fetch Academic Result
+                        </button>
+                        <button style="padding:12px 18px; background:#0284c7; color:#fff; font-weight:700; font-size:14px; border:none; border-radius:8px; cursor:pointer;" onclick="facExecuteCurrentFeature(true)" title="Force live fetch from official JNTUH website">
+                            🔄 Live Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="fac-jntuh-loader" style="display:none; text-align:center; padding:35px;">
+                    <div style="width:45px; height:45px; border:4px solid #1e2638; border-top-color:#38bdf8; border-radius:50%; animation:spin 0.85s linear infinite; margin:0 auto 12px;"></div>
+                    <p style="color:#94a3b8; font-weight:600;">Fetching JNTUH Data...</p>
+                </div>
+                <div id="fac-jntuh-feature-output"></div>
+                <div style="text-align:center; padding:16px; font-size:12px; color:#64748b; border-top:1px solid #1e2638; margin-top:20px;">
+                    Powered by <a href="https://jntuhconnect.dhethi.com" target="_blank" style="color:#38bdf8; text-decoration:none;">JNTUHConnect</a>
+                </div>
+            </div>
+        </div>`;
+        content.innerHTML = renderSectionCard('JNTUH Results', '', content.innerHTML);
+
+    } else if (["timetable","material","calendar"].includes(section)) {
+        const catMap = { timetable:'timetable', material:'course_material', calendar:'academic_calendar' };
+        const current = uploadedFiles.filter(f => f.category === catMap[section]);
+        content.innerHTML = `
+        <div class="section-header">Upload ${section.toUpperCase()}</div>
+        <div class="selection-box">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="active_section" value="${section}">
+                <input type="hidden" name="file_category"  value="${catMap[section]}">
+                <input type="hidden" name="department" value="${currentFilter.dept}">
+                <input type="hidden" name="year"       value="${currentFilter.year}">
+                <input type="hidden" name="section"    value="${currentFilter.sec}">
+                <input type="text" name="file_title" placeholder="File Title" required style="padding:8px; border:1px solid #ccc; border-radius:4px; width:200px; margin-right:10px;">
+                <input type="file" name="uploaded_file" required style="margin-right:10px;">
+                <button type="submit" name="upload_file_action" class="btn btn-teal">Upload</button>
+            </form>
+        </div>
+        <div class="table-container"><table>
+            <thead><tr><th>Title</th><th>Action</th></tr></thead>
+            <tbody>${current.length > 0 ? current.map(f => `
+            <tr>
+                <td><a href="/${f.file_path}" target="_blank" style="color:#3498db; text-decoration:underline;">${f.title}</a></td>
+                <td><a href="/faculty_dashboard?delete_file=${f.id}&active_section=${section}&assignment_id=${currentFilter.assign_id}"
+                    onclick="return confirm('Delete this file?')" class="btn btn-red" style="font-size:12px;">✖ Delete</a></td>
+            </tr>`).join('') : '<tr><td colspan="2">No files uploaded yet.</td></tr>'}
+            </tbody>
+        </table></div>`;
+        content.innerHTML = renderSectionCard(section.charAt(0).toUpperCase() + section.slice(1) + ' Management', '', content.innerHTML);
+    }
+}
+
+// ── Student Edit Modal ─────────────────────────────────────────
+function openEditModal(student) {
+    document.getElementById('edit_old_id').value = student.student_id;
+    document.getElementById('edit_id').value = student.student_id;
+    document.getElementById('edit_name').value = student.name;
+    document.getElementById('edit_dept').value = student.department;
+    document.getElementById('edit_year').value = student.year;
+    document.getElementById('edit_section').value = student.section;
+    document.getElementById('edit_phone').value = student.phone || '';
+    document.getElementById('editStudentModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editStudentModal').style.display = 'none';
+}
+
+// ── Student Details Modal ──────────────────────────────────────
+function openStudentModal(studentId, studentName) {
+    document.getElementById('modalStudentName').innerText = 'Details for ' + studentName;
+    document.getElementById('studentDetailsModal').style.display = 'block';
+    currentStudentData = null;
+
+    document.getElementById('attendanceDetails').innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+    document.getElementById('examsDetails').innerHTML = '<tr><td colspan="8">Loading...</td></tr>';
+    const feeEl = document.getElementById('feeDetails');
+    if (feeEl) feeEl.innerHTML = 'Loading...';
+    document.getElementById('summaryContent').innerHTML = 'Loading...';
+
+    fetch('/faculty_dashboard?get_student_details=' + encodeURIComponent(studentId))
+        .then(response => response.json())
+        .then(data => {
+            currentStudentData = data;
+
+            // Attendance
+            let attHtml = '';
+            if (data.attendance && data.attendance.length > 0) {
+                data.attendance.forEach(a => {
+                    attHtml += `<tr><td>${a.attendance_date}</td><td>${a.class_name}</td><td style="color:${a.status=='Present'?'green':'red'}">${a.status}</td><td>${a.semester || '-'}</td></tr>`;
+                });
+            } else {
+                attHtml = '<tr><td colspan="4">No attendance records.</td></tr>';
+            }
+            document.getElementById('attendanceDetails').innerHTML = attHtml;
+
+            // Exams
+            let examHtml = '';
+            if (data.exams && data.exams.length > 0) {
+                data.exams.forEach(e => {
+                    examHtml += `<tr>
+                        <td>${e.exam_type}</td>
+                        <td>${e.subject_name || '-'}</td>
+                        <td>${e.semester || '-'}</td>
+                        <td>${e.descriptive_marks}</td>
+                        <td>${e.objective_marks}</td>
+                        <td>${e.assignment_marks}</td>
+                        <td>${e.ppt_marks}</td>
+                        <td>${e.total_marks}</td>
+                    </tr>`;
+                });
+            } else {
+                examHtml = '<tr><td colspan="8">No exam results.</td></tr>';
+            }
+            document.getElementById('examsDetails').innerHTML = examHtml;
+
+            // Fee
+            if (feeEl) {
+                if (data.fee) {
+                    feeEl.innerHTML = `
+                        <div class="profile-row"><span class="profile-label">Total Fee:</span><span class="profile-value">₹${data.fee.total_fee}</span></div>
+                        <div class="profile-row"><span class="profile-label">Other Fee:</span><span class="profile-value">₹${data.fee.other_free || 0}</span></div>
+                        <div class="profile-row"><span class="profile-label">Paid:</span><span class="profile-value">₹${data.fee.paid_fee}</span></div>
+                        <div class="profile-row"><span class="profile-label">Balance:</span><span class="profile-value">₹${data.fee.remaining_fee}</span></div>
+                        <div class="profile-row"><span class="profile-label">Status:</span><span class="profile-value">${data.fee.payment_status}</span></div>
+                    `;
+                } else {
+                    feeEl.innerHTML = '<p>No fee record.</p>';
+                }
+            }
+
+            if (document.getElementById('summaryTab').style.display === 'block') {
+                renderSummaryTab();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to load student details.');
+        });
+}
+
+function closeStudentModal() {
+    document.getElementById('studentDetailsModal').style.display = 'none';
+}
+
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function renderSummaryTab() {
+    if (!currentStudentData) {
+        document.getElementById('summaryContent').innerHTML = '<p>No data loaded yet.</p>';
+        return;
+    }
+
+    const data = currentStudentData;
+    let summaryHtml = '';
+
+    const totalClasses = data.attendance ? data.attendance.length : 0;
+    const presentCount = data.attendance ? data.attendance.filter(a => a.status === 'Present').length : 0;
+    const absentCount = totalClasses - presentCount;
+    const percentage = totalClasses ? ((presentCount / totalClasses) * 100).toFixed(2) : 0;
+
+    summaryHtml += `
+        <div class="summary-box">
+            <h4>Attendance Summary</h4>
+            <div class="summary-item"><span>No. of classes:</span> <strong>${totalClasses}</strong></div>
+            <div class="summary-item"><span>Total no. of present classes:</span> <strong>${presentCount}</strong></div>
+            <div class="summary-item"><span>Total no. of absent classes:</span> <strong>${absentCount}</strong></div>
+            <div class="summary-item"><span>Percentage:</span> <strong style="color:${percentage < 75 ? 'red' : 'green'}">${percentage}%</strong></div>
+        </div>
+    `;
+
+    summaryHtml += `<h4>Exam Marks</h4>`;
+    if (data.exams && data.exams.length > 0) {
+        summaryHtml += `<table class="marks-table"><thead><tr><th>Exam Type</th><th>Subject</th><th>Total</th></tr></thead><tbody>`;
+        data.exams.forEach(e => {
+            summaryHtml += `<tr><td>${e.exam_type}</td><td>${e.subject_name || 'N/A'}</td><td>${e.total_marks}</td></tr>`;
+        });
+        summaryHtml += `</tbody></table>`;
+    } else {
+        summaryHtml += `<p>No exam records found.</p>`;
+    }
+
+    if (isAccounts) {
+        if (data.fee) {
+            summaryHtml += `
+                <div class="summary-box" style="margin-top:20px;">
+                    <h4>Tuition Fee</h4>
+                    <div class="summary-item"><span>Total college fee:</span> <strong>₹${data.fee.total_fee}</strong></div>
+                    <div class="summary-item"><span>Other fee:</span> <strong>₹${data.fee.other_free || 0}</strong></div>
+                    <div class="summary-item"><span>How much paid fee:</span> <strong>₹${data.fee.paid_fee}</strong></div>
+                    <div class="summary-item"><span>How much remaining fee:</span> <strong>₹${data.fee.remaining_fee}</strong></div>
+                    <div class="summary-item"><span>Status:</span> <strong>${data.fee.payment_status}</strong></div>
+                </div>
+            `;
+        } else {
+            summaryHtml += `<p>No fee record.</p>`;
+        }
+    }
+
+    document.getElementById('summaryContent').innerHTML = summaryHtml;
+}
+
+// ── Attendance helpers ─────────────────────────────────────────
+function toggleAttendance(studentId) {
+    const hiddenInput = document.getElementById('status_' + studentId);
+    const button = document.getElementById('btn_' + studentId);
+    if (hiddenInput.value === 'Present') {
+        hiddenInput.value = 'Absent';
+        button.textContent = 'Absent';
+        button.classList.remove('toggle-present');
+        button.classList.add('toggle-absent');
+    } else {
+        hiddenInput.value = 'Present';
+        button.textContent = 'Present';
+        button.classList.remove('toggle-absent');
+        button.classList.add('toggle-present');
+    }
+}
+
+function loadAttendance() {
+    const date = document.getElementById('att_date').value;
+    const className = document.getElementById('class_name').value;
+    const semester = document.getElementById('att_semester').value;
+    if (!date || !className || !semester) {
+        alert('Please select date, class name, and semester first.');
+        return;
+    }
+
+    fetch(`/faculty_dashboard?get_attendance=1&date=${encodeURIComponent(date)}&class=${encodeURIComponent(className)}&semester=${encodeURIComponent(semester)}&dept=${encodeURIComponent(currentFilter.dept)}&year=${encodeURIComponent(currentFilter.year)}&sec=${encodeURIComponent(currentFilter.sec)}`)
+        .then(response => response.json())
+        .then(data => {
+            for (let [sid, status] of Object.entries(data)) {
+                const hiddenInput = document.getElementById('status_' + sid);
+                const button = document.getElementById('btn_' + sid);
+                if (hiddenInput && button) {
+                    hiddenInput.value = status;
+                    button.textContent = status;
+                    if (status === 'Present') {
+                        button.classList.add('toggle-present');
+                        button.classList.remove('toggle-absent');
+                    } else {
+                        button.classList.add('toggle-absent');
+                        button.classList.remove('toggle-present');
+                    }
+                }
+            }
+            alert('Attendance loaded for ' + date + ' (' + className + ')');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to load attendance.');
+        });
+}
+
+// ── Exam & Fee auto-calculations ──────────────────────────────
+function calcTotal(sid) {
+    let desc = parseFloat(document.getElementById('desc_' + sid).value) || 0;
+    let obj = parseFloat(document.getElementById('obj_' + sid).value) || 0;
+    let ass = parseFloat(document.getElementById('ass_' + sid).value) || 0;
+    let ppt = parseFloat(document.getElementById('ppt_' + sid).value) || 0;
+    document.getElementById('tot_' + sid).value = desc + obj + ass + ppt;
+}
+
+function calcFee(sid) {
+    let tot = parseFloat(document.getElementById('fee_tot_' + sid).value) || 0;
+    let oth = parseFloat(document.getElementById('fee_oth_' + sid).value) || 0;
+    let pd = parseFloat(document.getElementById('fee_pd_' + sid).value) || 0;
+    document.getElementById('fee_rem_' + sid).value = tot + oth - pd;
+}
+
+function saveSingleFee(sid, name) {
+    let formData = new URLSearchParams();
+    formData.append('update_single_fee', '1');
+    formData.append('student_id', sid);
+    formData.append('name', name);
+    formData.append('total_fee', document.getElementById('fee_tot_' + sid).value);
+    formData.append('other_free', document.getElementById('fee_oth_' + sid).value);
+    formData.append('paid_fee', document.getElementById('fee_pd_' + sid).value);
+    formData.append('payment_status', document.getElementById('fee_stat_' + sid).value);
+
+    fetch('/faculty_dashboard', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Fee updated successfully for ' + name);
+        } else {
+            alert('Error updating fee: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(err => alert('Network error.'));
+}
+
+// ── Auto-show section on load ─────────────────────────────────
+window.onload = function() {
+    showSection('{{ active }}');
+};
+
+window.onclick = function(event) {
+    if (event.target === document.getElementById('editStudentModal'))   closeEditModal();
+    if (event.target === document.getElementById('studentDetailsModal')) closeStudentModal();
+};
+
+/* ═══════════════ JNTUH RESULTS (FACULTY) ═══════════════ */
+/* ─── Deduplicate and MERGE semester attempts ─────────────────────────
+   JNTUH returns multiple rows for the same semester number when a student
+   appeared in supplementary exams. We merge all subjects across attempts:
+   For each subject, we keep the passed attempt or the best attempt.
+   ─────────────────────────────────────────────────────────────────────── */
+function facGetBestSemResults(results) {
+    const semMap = {};
+    (results || []).forEach(function(sem) {
+        const semKey = String(sem.semester);
+        if (!semMap[semKey]) {
+            semMap[semKey] = Object.assign({}, sem, { subjects: [], _subjMap: {} });
+        }
+        
+        const currentSem = semMap[semKey];
+        const typeRaw = (sem.type || '').trim().toLowerCase();
+        if (typeRaw === 'regular' || typeRaw === '') {
+            currentSem.type = sem.type;
+            currentSem.examCode = sem.examCode;
+        }
+
+        (sem.subjects || []).forEach(function(sub) {
+            const code = (sub.code || '').trim().toUpperCase();
+            const name = (sub.name || '').trim().toUpperCase();
+            const subKey = code || name;
+            if (!subKey) return;
+
+            if (!currentSem._subjMap[subKey]) {
+                currentSem._subjMap[subKey] = Object.assign({}, sub);
+            } else {
+                const prev = currentSem._subjMap[subKey];
+                const curPassed = sub.passed;
+                const prevPassed = prev.passed;
+                
+                if (curPassed && !prevPassed) {
+                    currentSem._subjMap[subKey] = Object.assign({}, sub);
+                } else if (curPassed === prevPassed) {
+                    const curPts = sub.points || 0;
+                    const prevPts = prev.points || 0;
+                    if (curPts > prevPts) {
+                        currentSem._subjMap[subKey] = Object.assign({}, sub);
+                    }
+                }
+            }
+        });
+    });
+
+    const mergedResults = [];
+    Object.keys(semMap).sort(function(a,b){return Number(a)-Number(b);}).forEach(function(k) {
+        const semObj = semMap[k];
+        semObj.subjects = Object.values(semObj._subjMap);
+        delete semObj._subjMap;
+        
+        let totalCreds = 0;
+        let totalPts = 0;
+        semObj.subjects.forEach(function(s) {
+            if (s.credits > 0) {
+                totalCreds += s.credits;
+                totalPts += s.credits * (s.points || 0);
+            }
+        });
+        semObj.sgpa = totalCreds > 0 ? (totalPts / totalCreds) : 0;
+        semObj.totalCredits = totalCreds;
+        mergedResults.push(semObj);
+    });
+
+    return mergedResults;
+}
+
+function getActiveBacklogs(semResults) {
+    if (!semResults || !semResults.length) return [];
+    const subjectMap = {};
+    semResults.forEach(sem => {
+        (sem.subjects || []).forEach(s => {
+            const code = (s.code || '').trim().toUpperCase();
+            const name = (s.name || '').trim().toUpperCase();
+            const key  = code || name;
+            if (!key) return;
+            const isPassed = Boolean(s.passed) || (s.grade && !['F', 'AB', 'ABSENT', 'W', '-', ''].includes(s.grade.toUpperCase().trim()));
+            if (!subjectMap[key]) {
+                subjectMap[key] = { cleared: false, lastAttempt: null };
+            }
+            if (isPassed) {
+                subjectMap[key].cleared = true;
+            } else if (!subjectMap[key].cleared) {
+                subjectMap[key].lastAttempt = {
+                    semester: sem.semester,
+                    code: s.code || code,
+                    name: s.name || name,
+                    grade: s.grade,
+                    credits: s.credits
+                };
+            }
+        });
+    });
+    const activeBacklogs = [];
+    Object.keys(subjectMap).forEach(key => {
+        const item = subjectMap[key];
+        if (!item.cleared && item.lastAttempt) {
+            activeBacklogs.push(item.lastAttempt);
+        }
+    });
+    return activeBacklogs;
+}
+
+let facActiveBox = 1;
+let facCachedData = null;
+
+function facSwitchJntuhBox(boxNum) {
+    facActiveBox = boxNum;
+    [1,2,5,6,7].forEach(i => {
+        const card = document.getElementById('fac-card-box-' + i);
+        if (card) {
+            if (i === boxNum) card.classList.add('active');
+            else card.classList.remove('active');
+        }
+    });
+    const inputBar  = document.getElementById('fac-jntuh-input-bar');
+    const actionBtn = document.getElementById('fac-jntuh-action-btn');
+    const output    = document.getElementById('fac-jntuh-feature-output');
+
+    if (boxNum === 1) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '🎓 Fetch Academic Result';
+        if (facCachedData) facRenderAcademic(facCachedData);
+        else output.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; background:#151a28; border-radius:12px;">Enter Hallticket number above and click Fetch Academic Result.</div>`;
+    } else if (boxNum === 2) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '📊 Check Credit Eligibility';
+        if (facCachedData) facRenderCredit(facCachedData);
+        else output.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; background:#151a28; border-radius:12px;">Enter Hallticket number above and click Check Credit Eligibility.</div>`;
+    } else if (boxNum === 7) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '📋 Check Semester-Wise Results';
+        if (facCachedData) facRenderSemesterWiseResultCheck(facCachedData);
+        else output.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; background:#151a28; border-radius:12px;">Enter Hallticket number above and click Check Semester-Wise Results.</div>`;
+    } else if (boxNum === 5) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '⚠️ Generate Backlog Report';
+        if (facCachedData) facRenderBacklog(facCachedData);
+        else output.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; background:#151a28; border-radius:12px;">Enter Hallticket number above and click Generate Backlog Report.</div>`;
+    } else if (boxNum === 6) {
+        if (inputBar) inputBar.style.display = 'none';
+        facFetchClassResults();
+    }
+}
+
+function facExecuteCurrentFeature(forceRefresh = false) {
+    const roll = document.getElementById('fac-jntuh-roll').value.trim().toUpperCase();
+    const dob  = document.getElementById('fac-jntuh-dob').value.trim();
+
+    if (!roll || roll.length < 8) {
+        alert('Please enter a valid JNTUH Hallticket Number');
+        return;
+    }
+    if (!forceRefresh && facCachedData && facCachedData.roll === roll && facActiveBox !== 1) {
+        if (facActiveBox === 2) facRenderCredit(facCachedData);
+        else if (facActiveBox === 5) facRenderBacklog(facCachedData);
+        else if (facActiveBox === 7) facRenderSemesterWiseResultCheck(facCachedData);
+        else facRenderAcademic(facCachedData);
+        return;
+    }
+
+    const loader = document.getElementById('fac-jntuh-loader');
+    const output = document.getElementById('fac-jntuh-feature-output');
+    if (loader) loader.style.display = 'block';
+    if (output) output.innerHTML = '';
+
+    const form = new FormData();
+    form.append('roll_number', roll);
+    if (dob) form.append('dob', dob);
+    if (forceRefresh) form.append('force_refresh', '1');
+
+    fetch('/jntuh_results', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+            if (loader) loader.style.display = 'none';
+            if (!data.success) {
+                if (data.need_dob) {
+                    output.innerHTML = `
+                        <div style="background:#181d2d; border:1px solid #38bdf8; border-radius:14px; padding:24px; text-align:center; max-width:550px; margin:0 auto;">
+                            <div style="font-size:38px; margin-bottom:8px;">📅</div>
+                            <h4 style="color:#ffffff; margin:0 0 8px; font-size:17px;">Date of Birth Required</h4>
+                            <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">${data.error || 'Please enter DOB in YYYY/MM/DD format to fetch official live results.'}</p>
+                            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                                <input type="text" id="fac-jntuh-inline-dob" style="max-width:240px; padding:10px 14px; background:#0d1019; color:#fff; border:1px solid #38bdf8; border-radius:8px;" placeholder="YYYY/MM/DD" value="${dob}">
+                                <button style="padding:10px 20px; background:#38bdf8; color:#0b1220; font-weight:800; border:none; border-radius:8px; cursor:pointer;" onclick="const d=document.getElementById('fac-jntuh-inline-dob').value; if(d){ if(document.getElementById('fac-jntuh-dob')) document.getElementById('fac-jntuh-dob').value=d; facExecuteCurrentFeature(true); } else { alert('Please enter DOB'); }">🎯 Fetch Live Results</button>
+                            </div>
+                        </div>`;
+                    return;
+                }
+                output.innerHTML = `<div style="background:#181d2d; border:1px solid #ef4444; color:#ef4444; padding:20px; border-radius:12px; text-align:center;">${data.error || 'Results not found'}</div>`;
+                return;
+            }
+            facCachedData = data;
+            if (facActiveBox === 1) facRenderAcademic(data);
+            else if (facActiveBox === 2) facRenderCredit(data);
+            else if (facActiveBox === 5) facRenderBacklog(data);
+            else if (facActiveBox === 7) facRenderSemesterWiseResultCheck(data);
+        })
+        .catch(() => {
+            if (loader) loader.style.display = 'none';
+            output.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">Server Connection Error</div>`;
+        });
+}
+
+function facOnSemesterFilterChange(val) {
+    const select = document.getElementById('fac-jntuh-sem-select');
+    if (select && select.value !== val) select.value = val;
+    if (facCachedData) {
+        if (facActiveBox === 7) facRenderSemesterWiseResultCheck(facCachedData);
+        else facRenderAcademic(facCachedData);
+    }
+}
+
+function facSetSemesterFilter(val) {
+    facOnSemesterFilterChange(val);
+}
+
+function getSemNotation(sem) {
+    const m = {1: '1-1', 2: '1-2', 3: '2-1', 4: '2-2', 5: '3-1', 6: '3-2', 7: '4-1', 8: '4-2'};
+    return m[sem] || ('Sem ' + sem);
+}
+
+function getCollegeName(roll) {
+    return 'DRK College of Engineering and Technology';
+}
+
+function getBranchFullName(roll, dept) {
+    const d = (dept || '').trim().toUpperCase();
+    if (d === 'CSE') return 'Computer Science & Engineering';
+    if (d === 'CSD') return 'Computer Science & Engineering (Data Science)';
+    if (d === 'CSM') return 'Computer Science & Engineering (AI & ML)';
+    if (d === 'ECE') return 'Electronics & Communication Engineering';
+    if (d === 'EEE') return 'Electrical & Electronics Engineering';
+    if (d === 'MECH') return 'Mechanical Engineering';
+    if (d === 'CIVIL') return 'Civil Engineering';
+
+    const r = (roll || '').toUpperCase();
+    if (r.includes('A05') || r.includes('1A05')) return 'Computer Science & Engineering';
+    if (r.includes('A66') || r.includes('1A66')) return 'Computer Science & Engineering (Data Science)';
+    if (r.includes('A67') || r.includes('1A67')) return 'Computer Science & Engineering (AI & ML)';
+    if (r.includes('A04') || r.includes('1A04')) return 'Electronics & Communication Engineering';
+    if (r.includes('A02') || r.includes('1A02')) return 'Electrical & Electronics Engineering';
+    if (r.includes('A03') || r.includes('1A03')) return 'Mechanical Engineering';
+    if (r.includes('A01') || r.includes('1A01')) return 'Civil Engineering';
+    return 'Computer Science & Engineering';
+}
+
+function getActiveBacklogs(semResults) {
+    if (!semResults || !semResults.length) return [];
+    const subjectMap = {};
+    semResults.forEach(sem => {
+        (sem.subjects || []).forEach(s => {
+            const code = (s.code || '').trim().toUpperCase();
+            const name = (s.name || '').trim().toUpperCase();
+            const key  = code || name;
+            if (!key) return;
+            const isPassed = Boolean(s.passed) || (s.grade && !['F', 'AB', 'ABSENT', 'W', '-', ''].includes(s.grade.toUpperCase().trim()));
+            if (!subjectMap[key]) {
+                subjectMap[key] = { cleared: false, lastAttempt: null };
+            }
+            if (isPassed) {
+                subjectMap[key].cleared = true;
+            } else if (!subjectMap[key].cleared) {
+                subjectMap[key].lastAttempt = {
+                    semester: sem.semester,
+                    code: s.code || code,
+                    name: s.name || name,
+                    grade: s.grade,
+                    credits: s.credits
+                };
+            }
+        });
+    });
+    const activeBacklogs = [];
+    Object.keys(subjectMap).forEach(key => {
+        const item = subjectMap[key];
+        if (!item.cleared && item.lastAttempt) {
+            activeBacklogs.push(item.lastAttempt);
+        }
+    });
+    return activeBacklogs;
+}
+
+function renderRefStudentCard(student, idxNum, activeSubTab) {
+    if (typeof renderJntuhMemoView === 'function') {
+        return renderJntuhMemoView(student, {
+            activeTab: activeSubTab || 'official',
+            onTabChange: 'facSwitchSubResultTab'
+        });
+    }
+    return '';
+}
+
+function facSwitchSubResultTab(roll, tabName) {
+    if (facCachedData) {
+        const output = document.getElementById('fac-jntuh-feature-output');
+        if (output) {
+            output.innerHTML = renderRefStudentCard(facCachedData, '', tabName);
+        }
+    }
+}
+
+function facGetSemTabsHtml(selectedSem) {
+    const semMap = {1: '1st Sem (1-1)', 2: '2nd Sem (1-2)', 3: '3rd Sem (2-1)', 4: '4th Sem (2-2)', 5: '5th Sem (3-1)', 6: '6th Sem (3-2)', 7: '7th Sem (4-1)', 8: '8th Sem (4-2)'};
+    let semTabsHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; background:#0d1019; padding:12px; border-radius:12px; border:1px solid #1e2638; align-items:center;">
+        <span style="font-size:12px; font-weight:700; color:#94a3b8; margin-right:4px;">Filter Semester:</span>
+        <button onclick="facSetSemesterFilter('all')" style="padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; ${selectedSem === 'all' ? 'background:#38bdf8; color:#0b1220;' : 'background:#181d2d; color:#94a3b8; border:1px solid #28334a;'}">All Semesters</button>`;
+    for (let s = 1; s <= 8; s++) {
+        const isSel = String(selectedSem) === String(s);
+        semTabsHtml += `<button onclick="facSetSemesterFilter('${s}')" style="padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; ${isSel ? 'background:#38bdf8; color:#0b1220;' : 'background:#181d2d; color:#94a3b8; border:1px solid #28334a;'}">${semMap[s]}</button>`;
+    }
+    semTabsHtml += `</div>`;
+    return semTabsHtml;
+}
+
+function facRenderAcademic(data) {
+    const output = document.getElementById('fac-jntuh-feature-output');
+    if (output) {
+        output.innerHTML = renderRefStudentCard(data, '', 'official');
+    }
+}
+
+
+function facRenderSemesterWiseResultCheck(data) {
+    const output = document.getElementById('fac-jntuh-feature-output');
+    const select = document.getElementById('fac-jntuh-sem-select');
+    const selectedSem = select ? select.value : 'all';
+
+    const cgpa = data.cgpa || 0;
+    const backlogs = data.backlogsCount !== undefined ? data.backlogsCount : 0;
+
+    let totalMarksAll = 0;
+    let totalCreditsAll = 0;
+
+    let html = facGetSemTabsHtml(selectedSem);
+
+    let filteredResults = facGetBestSemResults(data.results || []);
+    if (selectedSem !== 'all') {
+        filteredResults = filteredResults.filter(sem => String(sem.semester) === String(selectedSem));
+    }
+
+    html += `
+    <div style="background:#181d2d; border:1px solid #28334a; border-radius:14px; padding:24px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+            <div>
+                <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">📅 Semester-Wise Result Check</h3>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Student Name: <strong style="color:#fff;">${data.name || data.roll}</strong> &nbsp;|&nbsp; Hallticket: <strong style="color:#38bdf8;">${data.roll}</strong></p>
+            </div>
+            <div style="text-align:right;">
+                <span style="font-size:24px; font-weight:800; color:#38bdf8;">${cgpa.toFixed(2)}</span>
+                <span style="font-size:14px; color:#64748b;"> Overall CGPA</span>
+            </div>
+        </div>
+        
+        <div style="overflow-x:auto;">
+            <table class="sem-table" style="width:100%; border-collapse:collapse; margin-top:10px;">
+                <thead>
+                    <tr style="background:#0f131d; color:#38bdf8; text-align:left;">
+                        <th style="padding:12px;">Semester</th>
+                        <th style="padding:12px; text-align:center;">Exam Type</th>
+                        <th style="padding:12px; text-align:center;">SGPA</th>
+                        <th style="padding:12px; text-align:center;">Total Marks</th>
+                        <th style="padding:12px; text-align:center;">Credits Earned</th>
+                        <th style="padding:12px; text-align:center;">Pass / Fail</th>
+                        <th style="padding:12px; text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    if (filteredResults.length) {
+        filteredResults.forEach(sem => {
+            let semMarks = 0;
+            let passCount = 0;
+            let failCount = 0;
+            (sem.subjects || []).forEach(s => {
+                const internal = s.internal !== undefined && s.internal !== '' ? Number(s.internal) : 0;
+                const external = s.external !== undefined && s.external !== '' ? Number(s.external) : 0;
+                const subTotal = internal + external;
+                if (!isNaN(subTotal)) semMarks += subTotal;
+                if (s.passed) passCount++;
+                else failCount++;
+            });
+
+            totalMarksAll += semMarks;
+            totalCreditsAll += (sem.credits || 0);
+
+            const semTypeW = (sem.type || '').trim().toLowerCase();
+            const isRegularW = semTypeW === 'regular' || semTypeW === '';
+            const badgeClass = isRegularW ? 'background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);' : 'background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);';
+            const statusLabel = isRegularW ? '✅ Regular' : '🔁 Supplementary';
+            const outcomeBadge = failCount === 0 ? '<span style="color:#34d399; font-weight:700;">ALL PASSED</span>' : `<span style="color:#f87171; font-weight:700;">${failCount} FAILED</span>`;
+
+            html += `
+                <tr style="border-bottom:1px solid #1e2638; text-align:center;">
+                    <td style="padding:12px; text-align:left; font-weight:700; color:#fff;">Semester ${sem.semester}</td>
+                    <td style="padding:12px;"><span style="padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; ${badgeClass}">${statusLabel}</span></td>
+                    <td style="padding:12px; font-size:15px; font-weight:800; color:#38bdf8;">${(sem.sgpa||0).toFixed(2)}</td>
+                    <td style="padding:12px; font-weight:700; color:#e2e8f0;">${semMarks}</td>
+                    <td style="padding:12px; color:#e2e8f0;">${sem.credits || '-'}</td>
+                    <td style="padding:12px;">${outcomeBadge}</td>
+                    <td style="padding:12px;"><span style="color:${failCount===0?'#34d399':'#f87171'}; font-weight:700;">${failCount === 0 ? 'Passed' : 'Backlogs'}</span></td>
+                </tr>`;
+        });
+    } else {
+        html += `<tr><td colspan="7" style="padding:20px; color:#94a3b8; text-align:center;">No semester results available ${selectedSem !== 'all' ? 'for Semester ' + selectedSem : ''}.</td></tr>`;
+    }
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-top:20px; padding-top:16px; border-top:1px solid #28334a; color:#94a3b8; font-size:14px;">
+            <div><strong>${selectedSem !== 'all' ? 'Semester' : 'Overall'} Total Marks:</strong> <span style="color:#38bdf8; font-size:16px; font-weight:800;">${totalMarksAll}</span></div>
+            <div><strong>Semesters Shown:</strong> <span style="color:#fff; font-weight:700;">${filteredResults.length} / ${facGetBestSemResults(data.results || []).length}</span></div>
+            <div><strong>Credits Earned:</strong> <span style="color:#34d399; font-weight:700;">${selectedSem !== 'all' ? totalCreditsAll : (data.totalCredits || totalCreditsAll)}</span></div>
+            <div><strong>Backlogs:</strong> <span style="color:${backlogs > 0 ? '#ef4444' : '#34d399'}; font-weight:700;">${backlogs}</span></div>
+        </div>
+    </div>`;
+
+    output.innerHTML = html;
+}
+
+function facRenderCredit(data) {
+    const output = document.getElementById('fac-jntuh-feature-output');
+    const tc = data.totalCredits || 0;
+    const rem = Math.max(0, 160 - tc);
+    output.innerHTML = `
+    <div style="background:#181d2d; border:1px solid #28334a; border-radius:14px; padding:24px;">
+        <h3 style="margin:0 0 10px; color:#fff; font-size:18px;">Credit Progress Report (${data.roll})</h3>
+        <div style="font-size:24px; font-weight:800; color:#38bdf8; margin-bottom:15px;">${tc} / 160 Passed Credits</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+            <div style="background:#0d1019; padding:12px; border-radius:8px; border:1px solid ${tc>=20?'#059669':'#dc2626'}; color:${tc>=20?'#34d399':'#f87171'}; font-size:13px; font-weight:700;">1st &rarr; 2nd Yr: ${tc>=20?'ELIGIBLE':'SHORT'}</div>
+            <div style="background:#0d1019; padding:12px; border-radius:8px; border:1px solid ${tc>=48?'#059669':'#dc2626'}; color:${tc>=48?'#34d399':'#f87171'}; font-size:13px; font-weight:700;">2nd &rarr; 3rd Yr: ${tc>=48?'ELIGIBLE':'SHORT'}</div>
+            <div style="background:#0d1019; padding:12px; border-radius:8px; border:1px solid ${tc>=72?'#059669':'#dc2626'}; color:${tc>=72?'#34d399':'#f87171'}; font-size:13px; font-weight:700;">3rd &rarr; 4th Yr: ${tc>=72?'ELIGIBLE':'SHORT'}</div>
+            <div style="background:#0d1019; padding:12px; border-radius:8px; border:1px solid #38bdf8; color:#38bdf8; font-size:13px; font-weight:700;">Degree: ${rem>0?rem+' CR NEEDED':'GRADUATE'}</div>
+        </div>
+    </div>`;
+}
+
+function facRenderBacklog(data) {
+    const output = document.getElementById('fac-jntuh-feature-output');
+    const bList = getActiveBacklogs(data.results);
+    if (bList.length === 0) {
+        output.innerHTML = `<div style="background:#181d2d; border:1px solid #10b981; color:#34d399; padding:25px; border-radius:14px; text-align:center; font-weight:700;">🎉 0 Active Backlogs - Student Passed All Subjects Cleanly!</div>`;
+        return;
+    }
+    let html = `<div style="background:#181d2d; border:1px solid #28334a; border-radius:14px; padding:20px;">
+        <h4 style="margin:0 0 14px; color:#ef4444; font-size:16px;">⚠️ Active Present Backlogs List (${bList.length})</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead><tr style="background:#0f131d; color:#94a3b8;"><th style="padding:10px; text-align:left;">Sem</th><th style="padding:10px; text-align:left;">Code</th><th style="padding:10px; text-align:left;">Subject Title</th><th style="padding:10px;">Grade</th></tr></thead>
+            <tbody>`;
+    bList.forEach(b => {
+        html += `<tr><td style="padding:10px; border-bottom:1px solid #1e2638; color:#fff;">Sem ${b.semester}</td><td style="padding:10px; border-bottom:1px solid #1e2638; color:#38bdf8;">${b.code}</td><td style="padding:10px; border-bottom:1px solid #1e2638; color:#e2e8f0;">${b.name}</td><td style="padding:10px; border-bottom:1px solid #1e2638; color:#f87171; font-weight:700;">${b.grade}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    output.innerHTML = html;
+}
+
+function facFetchClassResults() {
+    const output = document.getElementById('fac-jntuh-feature-output');
+    output.innerHTML = `
+    <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:flex-end;">
+        <div style="flex:1; min-width:140px;">
+            <label style="display:block; font-size:12px; color:#94a3b8; margin-bottom:4px;">Department</label>
+            <select id="fac-class-dept" style="width:100%; padding:10px; background:#0d1019; color:#fff; border:1px solid #28334a; border-radius:8px;" onchange="facLoadClassData()">
+                <option value="">All Departments</option><option value="CSE">CSE</option><option value="CSD">CSD</option><option value="CSM">CSM</option><option value="ECE">ECE</option><option value="MECH">MECH</option>
+            </select>
+        </div>
+        <div style="flex:2; min-width:200px;">
+            <label style="display:block; font-size:12px; color:#94a3b8; margin-bottom:4px;">Search Hallticket / Class Roll (e.g. 23U51A05A6)</label>
+            <input type="text" id="fac-class-search" placeholder="Type Hallticket No (e.g. 23U51A05A6 or 23U51A0501)..." style="width:100%; padding:10px; background:#0d1019; color:#fff; border:1px solid #28334a; border-radius:8px;" onkeyup="if(event.key==='Enter') facLoadClassData()">
+        </div>
+        <div style="width:170px;">
+            <label style="display:block; font-size:12px; color:#38bdf8; margin-bottom:4px;">Choose Semester</label>
+            <select id="fac-class-sem-select" style="width:100%; padding:10px; background:#0d1019; color:#fff; border:1px solid #28334a; border-radius:8px; cursor:pointer;" onchange="facLoadClassData()">
+                <option value="1">1st Sem (1-1)</option>
+                <option value="2">2nd Sem (1-2)</option>
+                <option value="3">3rd Sem (2-1)</option>
+                <option value="4">4th Sem (2-2)</option>
+                <option value="5">5th Sem (3-1)</option>
+                <option value="6">6th Sem (3-2)</option>
+                <option value="7">7th Sem (4-1)</option>
+                <option value="8">8th Sem (4-2)</option>
+                <option value="all">All Semesters</option>
+            </select>
+        </div>
+        <button style="padding:10px 18px; background:#38bdf8; color:#0b1220; font-weight:800; border:none; border-radius:8px; cursor:pointer;" onclick="facLoadClassData()">🏆 View Class Results</button>
+    </div>
+    <div id="fac-class-content"></div>`;
+    facLoadClassData();
+}
+
+function facLoadClassData() {
+    const dept = document.getElementById('fac-class-dept') ? document.getElementById('fac-class-dept').value : '';
+    const search = document.getElementById('fac-class-search') ? document.getElementById('fac-class-search').value.trim() : '';
+    const semElem = document.getElementById('fac-class-sem-select');
+    const selectedSem = semElem ? semElem.value : '1';
+    const container = document.getElementById('fac-class-content');
+
+    if (container) container.innerHTML = `<div style="text-align:center; padding:30px;"><div style="width:36px; height:36px; border:3px solid #1e2638; border-top-color:#38bdf8; border-radius:50%; animation:spin 0.85s linear infinite; margin:0 auto;"></div></div>`;
+
+    fetch(`/jntuh_class_results?department=${encodeURIComponent(dept)}&search=${encodeURIComponent(search)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!container) return;
+            if (!data.success || !data.students || !data.students.length) {
+                container.innerHTML = `<div style="text-align:center; padding:24px; color:#94a3b8; background:#181d2d; border-radius:12px;">No class results found. Please enter a valid Hallticket Number (e.g. 23U51A05A6 or 23U51A0501).</div>`;
+                return;
+            }
+
+                        const semLabel = selectedSem === 'all' ? 'All Semesters' : `Semester ${selectedSem}`;
+            let html = `
+                <div style="text-align:center; padding:18px 0; border-bottom:1px solid #242c42; margin-bottom:24px;">
+                    <h2 style="font-size:26px; font-weight:800; color:#38bdf8; letter-spacing:1.5px; margin:0 0 4px; text-transform:uppercase;">${semLabel} RESULTS</h2>
+                    <div style="font-size:13px; font-weight:700; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">${data.totalStudents} STUDENTS</div>
+                </div>`;
+
+            (data.students || []).forEach((student, idx) => {
+                html += renderRefStudentCard(student, idx + 1, selectedSem);
+            });
+
+            container.innerHTML = html;
+        });
+}
+</script>
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+</script>
+<script src="/static/jntuh_memo.js"></script>
+<script src="/static/ux.js"></script>
+</div>
+</body>
+</html>
+

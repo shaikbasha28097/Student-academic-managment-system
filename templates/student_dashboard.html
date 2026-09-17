@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Dashboard – SAMS</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="Student portal for attendance, exam results and fees at DRK SAMS">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
+        body { margin:0; font-family:'Inter','Segoe UI',system-ui,sans-serif; background:#f0f4f8; color:#111827; min-width:320px; }
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 230px; height:100vh; background:#1e293b;
+            position:fixed; overflow-y:auto; z-index:200;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            display:flex; align-items:center; gap:10px;
+            padding:18px 16px; background:rgba(0,0,0,0.2);
+            border-bottom:1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-brand .brand-icon {
+            width:34px; height:34px; background:#3b82f6; border-radius:9px;
+            display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff;
+        }
+        .sidebar-brand .brand-name { font-size:14px; font-weight:800; color:#fff; }
+        .sidebar-brand .brand-sub  { font-size:11px; color:#64748b; }
+        .sidebar a {
+            display:flex; align-items:center; gap:11px; color:#94a3b8;
+            text-decoration:none; padding:12px 16px; font-size:14px; font-weight:500;
+            border-bottom:1px solid rgba(255,255,255,0.04); transition:all 0.18s;
+        }
+        .sidebar a:hover { background:#334155; color:#fff; }
+        .sidebar a.active-link { background:rgba(59,130,246,0.15); color:#93c5fd; border-right:3px solid #3b82f6; font-weight:700; }
+        /* ── Main Content ── */
+        .content { margin-left:240px; padding:24px; }
+        /* ── Summary Cards ── */
+        .cards {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:16px; margin-bottom:22px;
+        }
+        .card {
+            background:#fff; padding:18px 20px; border-radius:16px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 14px rgba(0,0,0,0.05);
+            border:1px solid #e5e7eb;
+            display:flex; align-items:center; gap:14px;
+        }
+        .card-icon {
+            width:44px; height:44px; border-radius:12px;
+            display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0;
+        }
+        .card-icon.blue   { background:rgba(59,130,246,0.12); color:#3b82f6; }
+        .card-icon.green  { background:rgba(34,197,94,0.12);  color:#22c55e; }
+        .card-icon.red    { background:rgba(239,68,68,0.12);   color:#ef4444; }
+        .card-icon.orange { background:rgba(245,158,11,0.12);  color:#f59e0b; }
+        .card-info .card-val { font-size:22px; font-weight:800; color:#111827; }
+        .card-info .card-lbl { font-size:13px; color:#6b7280; font-weight:500; }
+        /* old card fallback */
+        .card h3 { margin:0 0 4px; font-size:13px; color:#6b7280; font-weight:500; }
+        .card p  { margin:0; font-size:22px; font-weight:800; color:#111827; }
+        /* ── Section Container ── */
+        .section { display:none; }
+        .section.active { display:block; }
+        /* ── Table Card ── */
+        .sams-card {
+            background:#fff; border-radius:16px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 14px rgba(0,0,0,0.05);
+            border:1px solid #e5e7eb; overflow:hidden; margin-bottom:22px;
+        }
+        .sams-card-header {
+            padding:18px 22px; display:flex; align-items:center;
+            justify-content:space-between; border-bottom:1px solid #f1f5f9;
+            flex-wrap:wrap; gap:10px;
+        }
+        .sams-card-title {
+            font-size:17px; font-weight:700; color:#111827;
+            display:flex; align-items:center; gap:9px; margin:0;
+        }
+        .sams-card-title i { color:#3b82f6; }
+        .sams-card-body { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        /* ── Table ── */
+        table { width:100%; border-collapse:collapse; min-width:480px; }
+        th, td { padding:13px 16px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:14px; }
+        th { background:#f8fafc; color:#374151; font-weight:700; font-size:13px; border-bottom:2px solid #e5e7eb; }
+        tr:hover { background:#f8fafc; }
+        /* status classes */
+        .status-present { color:#16a34a; font-weight:700; }
+        .status-absent  { color:#dc2626; font-weight:700; }
+        .status-paid    { color:#16a34a; font-weight:700; }
+        .status-pending { color:#d97706; font-weight:700; }
+        /* Badges */
+        .sams-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 11px; border-radius:100px; font-size:12px; font-weight:700; }
+        .sams-badge.green  { background:rgba(34,197,94,0.12);  color:#16a34a; }
+        .sams-badge.red    { background:rgba(239,68,68,0.12);   color:#dc2626; }
+        .sams-badge.blue   { background:rgba(59,130,246,0.12);  color:#2563eb; }
+        .sams-badge.orange { background:rgba(245,158,11,0.12);  color:#d97706; }
+        /* Filter Bar */
+        .filter-bar {
+            padding:13px 22px; display:flex; align-items:center; gap:10px;
+            flex-wrap:wrap; border-bottom:1px solid #f1f5f9; background:#fafbfc;
+        }
+        .filter-bar label { font-size:13px; font-weight:600; color:#374151; }
+        .filter-bar select {
+            padding:9px 12px; border:1.5px solid #e5e7eb; border-radius:10px;
+            font-size:14px; color:#374151; background:#fff; outline:none; cursor:pointer;
+        }
+        /* profile */
+        .profile-card { max-width:500px; background:#fff; border-radius:16px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.07); border:1px solid #e5e7eb; }
+        .profile-field { margin:12px 0; display:flex; border-bottom:1px solid #f1f5f9; padding-bottom:10px; }
+        .profile-field .label { width:130px; font-weight:600; color:#374151; font-size:14px; }
+        .profile-field .value { flex:1; color:#111827; font-size:14px; }
+        .profile-actions { margin-top:22px; display:flex; gap:10px; }
+        .edit-form input, .edit-form select, .edit-form button { margin:8px 0; padding:10px 13px; width:100%; box-sizing:border-box; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; }
+        .edit-form button { background:#3b82f6; color:#fff; border:none; cursor:pointer; font-weight:600; }
+        .password-form { margin-top:18px; padding:16px; background:#f8fafc; border-radius:10px; border:1px solid #e5e7eb; display:none; }
+        .password-form input { width:100%; padding:10px 13px; margin:5px 0; box-sizing:border-box; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; }
+        .msg-success { color:#16a34a; font-weight:600; }
+        .msg-error   { color:#dc2626; font-weight:600; }
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; border:none; cursor:pointer; font-size:13px; font-weight:600; color:#fff; transition:all 0.18s; }
+        .btn:hover { opacity:0.87; }
+        .btn-secondary { background:#6b7280; }
+        .fee-breakdown td:first-child { text-align:left; font-weight:500; }
+        .fee-breakdown td:last-child  { text-align:right; font-weight:bold; }
+        .hidden { display:none !important; }
+
+        /* ═══════════════ JNTUH RESULTS DARK INTERFACE ═══════════════ */
+        .jntuh-dark-container {
+            background: #090b10;
+            border-radius: 20px;
+            padding: 35px 30px;
+            color: #ffffff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .jntuh-top-pill {
+            background: #dcdfe4;
+            color: #111827;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 10px 32px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: max-content;
+            margin: 0 auto 32px auto;
+            letter-spacing: 0.2px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .jntuh-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 800px) {
+            .jntuh-cards-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
+        .jntuh-nav-card {
+            background: #0f131d;
+            border: 1.5px solid #1e2638;
+            border-radius: 18px;
+            padding: 32px 28px;
+            cursor: pointer;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 145px;
+            box-sizing: border-box;
+        }
+
+        .jntuh-nav-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .jntuh-nav-card .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .jntuh-nav-card .card-desc {
+            font-size: 14px;
+            line-height: 1.55;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Active / Selected Card State (Light Blue) */
+        .jntuh-nav-card.active {
+            background: #82bbfb !important;
+            border-color: #82bbfb !important;
+            box-shadow: 0 12px 35px rgba(130, 187, 251, 0.35) !important;
+        }
+
+        .jntuh-nav-card.active .card-title {
+            color: #090d16 !important;
+        }
+
+        .jntuh-nav-card.active .card-desc {
+            color: #1e293b !important;
+        }
+
+        /* Feature Display Panel */
+        .jntuh-feature-panel {
+            background: #111522;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid #1e2638;
+        }
+
+        .jntuh-search-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            background: #181d2d;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #242c42;
+        }
+
+        .jntuh-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1.5px solid #2e3954;
+            background: #0d1019;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .jntuh-input:focus {
+            border-color: #38bdf8;
+        }
+
+        .jntuh-btn {
+            padding: 12px 24px;
+            background: #38bdf8;
+            color: #0b1220;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .jntuh-btn:hover {
+            background: #7dd3fc;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .jntuh-prompt-box {
+            text-align: center;
+            padding: 35px 20px;
+            color: #94a3b8;
+            font-size: 15px;
+            background: #151a28;
+            border-radius: 12px;
+            border: 1px dashed #28334a;
+        }
+
+        .jntuh-notice-box {
+            text-align: center;
+            padding: 45px 20px;
+            background: #151a28;
+            border-radius: 12px;
+            border: 1px solid #28334a;
+        }
+
+        .credit-stat-card {
+            background: #181d2d;
+            border-radius: 12px;
+            padding: 22px;
+            border: 1px solid #28334a;
+            margin-bottom: 18px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .leaderboard-table th {
+            background: #181d2d;
+            color: #94a3b8;
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 2px solid #28334a;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .leaderboard-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #1e2638;
+            color: #e2e8f0;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .rank-1 { background: #eab308; color: #000; }
+        .rank-2 { background: #94a3b8; color: #000; }
+        .rank-3 { background: #b45309; color: #fff; }
+        .rank-other { background: #1e2638; color: #94a3b8; }
+
+        /* Loading spinner */
+        #jntuh-loader {
+            display: none;
+            text-align: center;
+            padding: 35px;
+        }
+        .jntuh-spinner {
+            width: 45px; height: 45px;
+            border: 4px solid #1e2638;
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* CGPA Banner */
+        .cgpa-banner {
+            background: #181d2d;
+            border: 1px solid #28334a;
+            border-radius: 14px;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .cgpa-circle {
+            width: 95px; height: 95px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-weight: 800;
+            color: #fff;
+            font-size: 25px;
+            line-height: 1.1;
+        }
+        .cgpa-circle small { font-size: 11px; font-weight: 600; opacity: 0.85; }
+        .cgpa-green { background: linear-gradient(135deg,#10b981,#059669); }
+        .cgpa-yellow { background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+        .cgpa-red   { background: linear-gradient(135deg,#ef4444,#dc2626); }
+        .cgpa-info h3 { margin:0 0 6px; font-size:20px; color:#ffffff; }
+        .cgpa-info p  { margin:0; font-size:14px; color:#94a3b8; }
+        .cgpa-chips { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+        .cgpa-chip {
+            background:#0f131d;
+            border: 1px solid #28334a;
+            border-radius:20px;
+            padding:4px 14px;
+            font-size:13px;
+            color:#cbd5e1;
+            font-weight:600;
+        }
+
+        /* Semester Cards Grid */
+        .jntuh-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .sem-card {
+            background: #181d2d;
+            border: 1px solid #28334a;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .sem-card-header {
+            background: #0f131d;
+            color: #fff;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #28334a;
+        }
+        .sem-card-header h4 { margin:0; font-size:15px; font-weight:700; color:#fff; }
+        .sem-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .sem-suppl-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .sgpa-chip {
+            background: #38bdf8;
+            color:#0b1220;
+            border-radius: 20px;
+            padding: 3px 14px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .sem-card-body { padding: 0; }
+        .sem-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .sem-table thead tr { background:#0f131d; }
+        .sem-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #28334a;
+        }
+        .sem-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #1e2638;
+            color: #cbd5e1;
+        }
+        .sem-table tr:last-child td { border-bottom: none; }
+        .grade-pass { color:#34d399; font-weight:700; }
+        .grade-fail { color:#f87171; font-weight:700; }
+        .grade-na   { color:#64748b; }
+
+        .jntuh-credit {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #64748b;
+            border-top: 1px solid #1e2638;
+            margin-top: 20px;
+        }
+        /* ── Hamburger Button ── */
+        .hamburger {
+            display: none; position: fixed; top: 12px; left: 12px;
+            z-index: 1100; background: #1e293b; color: #fff;
+            border: none; border-radius: 9px; width: 42px; height: 42px;
+            font-size: 20px; cursor: pointer;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 900;
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 1024px) {
+            .content { margin-left: 220px; width: calc(100% - 220px); padding: 20px; }
+            .sidebar { width: 220px; }
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .sidebar { transform: translateX(-100%); z-index: 1000; width: 268px; }
+            .sidebar.open { transform: translateX(0); }
+            .content { margin-left: 0 !important; width: 100% !important; padding: 14px; padding-top: 66px; box-sizing: border-box; }
+            .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; width: 100%; }
+            .sams-card-header { flex-direction: column; align-items: flex-start; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-bar select { width: 100%; }
+            th, td { white-space: normal; overflow-wrap: anywhere; }
+        }
+        @media (max-width: 480px) {
+            .cards { grid-template-columns: 1fr; }
+            .content { padding: 12px; padding-top: 72px; }
+            .card { padding: 14px 16px; }
+            .profile-card { padding: 18px; }
+        }
+    </style>
+</head>
+<body class="sams-layout">
+
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fas fa-user-graduate"></i></div>
+        <div>
+            <div class="brand-name">DRK Students</div>
+            <div class="brand-sub">SAMS 4th Year</div>
+        </div>
+    </div>
+    <a href="?tab=attendance"  class="{{ 'active-link' if active_tab=='attendance'  else '' }}"><i class="fas fa-clipboard-list"></i> Attendance</a>
+    <a href="?tab=results"     class="{{ 'active-link' if active_tab=='results'     else '' }}"><i class="fas fa-chart-bar"></i> Exam Results</a>
+    <a href="?tab=fees"        class="{{ 'active-link' if active_tab=='fees'        else '' }}"><i class="fas fa-rupee-sign"></i> Tuition Fees</a>
+    <a href="?tab=material"    class="{{ 'active-link' if active_tab=='material'    else '' }}"><i class="fas fa-book"></i> Course Material</a>
+    <a href="?tab=timetable"   class="{{ 'active-link' if active_tab=='timetable'   else '' }}"><i class="fas fa-clock"></i> Timetable</a>
+    <a href="?tab=calendar"    class="{{ 'active-link' if active_tab=='calendar'    else '' }}"><i class="fas fa-calendar-alt"></i> Academic Calendar</a>
+    <a href="?tab=profile"     class="{{ 'active-link' if active_tab=='profile'     else '' }}"><i class="fas fa-user"></i> My Profile</a>
+    <a href="?tab=jntuh" class="{{ 'active-link' if active_tab=='jntuh' else '' }}" style="color:#60a5fa; font-weight:700;"><i class="fas fa-graduation-cap"></i> JNTUH Results</a>
+    <a href="/logout" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="content">
+    <!-- SUMMARY CARDS -->
+    <div class="cards">
+        <div class="card">
+            <div class="card-icon blue"><i class="fas fa-clipboard-check"></i></div>
+            <div class="card-info"><div class="card-val">{{ att_pct }}%</div><div class="card-lbl">Attendance</div></div>
+        </div>
+        <div class="card">
+            <div class="card-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="card-info"><div class="card-val">{{ present_classes }}</div><div class="card-lbl">Present Classes</div></div>
+        </div>
+        <div class="card">
+            <div class="card-icon orange"><i class="fas fa-rupee-sign"></i></div>
+            <div class="card-info"><div class="card-val">₹{{ "{:,.0f}".format(remaining|float) }}</div><div class="card-lbl">Remaining Fee</div></div>
+        </div>
+        <div class="card">
+            <div class="card-icon {{ 'green' if fee and fee.payment_status == 'Paid' else 'red' }}"><i class="fas fa-wallet"></i></div>
+            <div class="card-info">
+                <div class="card-val {{ 'status-paid' if fee and fee.payment_status == 'Paid' else 'status-pending' }}">{{ fee.payment_status if fee else 'N/A' }}</div>
+                <div class="card-lbl">Payment Status</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ATTENDANCE ═══ -->
+    <div id="attendance" class="section {{ 'active' if active_tab=='attendance' else '' }}">
+        <div class="sams-card" style="margin-bottom:18px;">
+            <div class="sams-card-header">
+                <h3 class="sams-card-title"><i class="fas fa-clipboard-list"></i> Attendance Summary</h3>
+                <div class="filter-bar" style="border:none; background:none; padding:0;">
+                    <form method="get" style="display:flex; align-items:center; gap:10px;">
+                        <input type="hidden" name="tab" value="attendance">
+                        <label>Filter by Semester:</label>
+                        <select name="att_semester" onchange="this.form.submit()">
+                            <option value="">All Semesters</option>
+                            {% for i in semesters %}
+                            <option value="{{ i }}" {{ 'selected' if sel_att_sem == i|string else '' }}>Semester {{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+            <div class="sams-card-body">
+                <table>
+                    <thead><tr><th>Total Classes</th><th>Present</th><th>Absent</th><th>Percentage</th></tr></thead>
+                    <tbody><tr>
+                        <td>{{ total_classes }}</td>
+                        <td><span class="sams-badge green">{{ present_classes }}</span></td>
+                        <td><span class="sams-badge red">{{ absent_classes }}</span></td>
+                        <td>
+                            <strong class="{{ 'status-present' if att_pct|float >= 75 else 'status-absent' }}">{{ att_pct }}%</strong>
+                        </td>
+                    </tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="sams-card">
+            <div class="sams-card-header">
+                <h3 class="sams-card-title"><i class="fas fa-calendar-check"></i> Class Wise Attendance</h3>
+            </div>
+            <div class="sams-card-body">
+                <table>
+                    <thead><tr><th>Semester</th><th>Date</th><th>Class</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for row in att_records %}
+                    <tr>
+                        <td><span class="sams-badge blue">Sem {{ row.semester }}</span></td>
+                        <td>{{ row.attendance_date }}</td>
+                        <td>{{ row.class_name }}</td>
+                        <td><span class="sams-badge {{ 'green' if row.status == 'Present' else 'red' }}">{{ row.status }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center; padding:36px; color:#9ca3af;">No attendance records found.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ EXAM RESULTS ═══ -->
+    <div id="results" class="section {{ 'active' if active_tab=='results' else '' }}">
+        <h2>Exam Results</h2>
+        <div class="filter-bar">
+            <form method="get">
+                <input type="hidden" name="tab" value="results">
+                <label>Filter by Semester:</label>
+                <select name="exam_semester" onchange="this.form.submit()">
+                    <option value="">All Semesters</option>
+                    {% for i in semesters %}
+                    <option value="{{ i }}" {{ 'selected' if sel_exam_sem == i|string else '' }}>Semester {{ i }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <table class="sams-table">
+            <thead>
+                <tr>
+                    <th>Exam Type</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th class="marks-col">Descriptive</th>
+                    <th class="marks-col">Objective</th>
+                    <th class="marks-col">Assignment</th>
+                    <th class="marks-col">PPT</th>
+                    <th class="marks-col">Points</th>
+                    <th>Status</th>
+                    <th class="marks-col">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for e in exam_records %}
+            <tr>
+                <td>{{ e.exam_type }}</td>
+                <td>{{ e.subject_name }}</td>
+                <td>{{ e.semester }}</td>
+                <td class="marks-col">{{ e.descriptive_marks }}</td>
+                <td class="marks-col">{{ e.objective_marks }}</td>
+                <td class="marks-col">{{ e.Assignment_marks }}</td>
+                <td class="marks-col">{{ e.ppt_marks }}</td>
+                <td class="marks-col">{{ e.points }}</td>
+                <td>{{ e.passed }}</td>
+                <td class="marks-col">{{ e.total_marks }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10" style="text-align:center; padding:18px; color:#9ca3af;">No exam results found for this semester.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ═══ FEES ═══ -->
+    <div id="fees" class="section {{ 'active' if active_tab=='fees' else '' }}">
+        <h2>Tuition Fee Details</h2>
+        {% if fee %}
+        <table class="fee-breakdown">
+            <tr><th>Fee Type</th><th>Amount (₹)</th></tr>
+            <tr><td>Total Fee</td><td>{{ "{:,.0f}".format(fee.total_fee|float) }}</td></tr>
+            <tr><td>Other Fee</td><td>{{ "{:,.0f}".format((fee.other_free or 0)|float) }}</td></tr>
+            <tr><td class="status-present">Paid Fee</td><td class="status-present">{{ "{:,.0f}".format(fee.paid_fee|float) }}</td></tr>
+            <tr><td class="status-absent">Remaining Fee</td><td class="status-absent">{{ "{:,.0f}".format(fee.remaining_fee|float) }}</td></tr>
+            <tr>
+                <td>Payment Status</td>
+                <td class="{{ 'status-paid' if fee.payment_status == 'Paid' else 'status-pending' }}">{{ fee.payment_status }}</td>
+            </tr>
+        </table>
+
+        <h3 style="margin-top:30px;">Payment History Log</h3>
+        <table>
+            <tr><th>Date &amp; Time</th><th>Updated By</th><th>Recorded Paid Amount (₹)</th><th>Recorded Balance (₹)</th><th>Status</th></tr>
+            {% for h in fee_history %}
+            <tr>
+                <td>{{ h.updated_at if h.updated_at is string else (h.updated_at.strftime('%d %b %Y, %I:%M %p') if h.updated_at else '-') }}</td>
+                <td>{{ h.updated_by }}</td>
+                <td style="color:green; font-weight:bold;">{{ "{:,.0f}".format(h.paid_amount|float) }}</td>
+                <td style="color:red; font-weight:bold;">{{ "{:,.0f}".format(h.remaining_balance|float) }}</td>
+                <td>{{ h.payment_status }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5">No historical payment records found.</td></tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No fee records found.</p>
+        {% endif %}
+    </div>
+
+    <!-- ═══ COURSE MATERIAL ═══ -->
+    <div id="material" class="section {{ 'active' if active_tab=='material' else '' }}">
+        <h2>Course Material</h2>
+        {% for f in materials %}
+        <p>📄 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        {% else %}
+        <p>No course material uploaded.</p>
+        {% endfor %}
+    </div>
+
+    <!-- ═══ TIMETABLE ═══ -->
+    <div id="timetable" class="section {{ 'active' if active_tab=='timetable' else '' }}">
+        <h2>Timetable</h2>
+        {% for f in timetables %}
+        <p>📋 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        {% else %}
+        <p>No timetable uploaded.</p>
+        {% endfor %}
+    </div>
+
+    <!-- ═══ ACADEMIC CALENDAR ═══ -->
+    <div id="calendar" class="section {{ 'active' if active_tab=='calendar' else '' }}">
+        <h2>Academic Calendar</h2>
+        {% for f in calendars %}
+        <p>📅 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        {% else %}
+        <p>No academic calendar uploaded.</p>
+        {% endfor %}
+    </div>
+
+    <!-- ═══ PROFILE ═══ -->
+    <div id="profile" class="section {{ 'active' if active_tab=='profile' else '' }}">
+        <h2>My Profile</h2>
+
+        {% if pw_msg %}<p class="msg-success">{{ pw_msg }}</p>{% endif %}
+        {% if pw_error %}<p class="msg-error">{{ pw_error }}</p>{% endif %}
+
+        <!-- View Mode -->
+        <div id="profile-view" class="profile-card">
+            <div class="profile-field"><span class="label">Name:</span><span class="value">{{ student.name }}</span></div>
+            <div class="profile-field"><span class="label">Student ID:</span><span class="value">{{ student.student_id }}</span></div>
+            <div class="profile-field"><span class="label">Email:</span><span class="value">{{ student.email }}</span></div>
+            <div class="profile-field"><span class="label">Phone:</span><span class="value">{{ student.phone }}</span></div>
+            <div class="profile-field"><span class="label">Department:</span><span class="value">{{ student.department }}</span></div>
+            <div class="profile-field"><span class="label">Year/Section:</span><span class="value">{{ student.year }} / {{ student.section }}</span></div>
+            <div class="profile-field"><span class="label">Date of Birth:</span><span class="value">{{ student.dob if student.dob else 'Not Provided (Update profile below)' }}</span></div>
+
+            <div class="profile-actions">
+                <button class="btn" onclick="showEditForm()">Edit Profile</button>
+                <button class="btn btn-secondary" onclick="showPasswordForm()">Change Password</button>
+            </div>
+
+            <div id="password-form" class="password-form">
+                <h4>Change Password</h4>
+                <form method="post">
+                    <input type="hidden" name="tab" value="profile">
+                    <input type="password" name="old_password" placeholder="Old password" required>
+                    <input type="password" name="new_password" placeholder="New password" required>
+                    <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+                    <button type="submit" name="change_password" class="btn">Update Password</button>
+                    <button type="button" class="btn btn-secondary" onclick="hidePasswordForm()">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div id="profile-edit" class="profile-card edit-form" style="display:none;">
+            <h3>Edit Profile</h3>
+            <form method="post">
+                <input type="hidden" name="tab" value="profile">
+                <label>Name</label><input name="name" value="{{ student.name }}" required>
+                <label>Email</label><input type="email" name="email" value="{{ student.email }}" required>
+                <label>Phone</label><input name="phone" value="{{ student.phone }}" required>
+                <label>Date of Birth</label>
+                <input type="date" name="dob" value="{{ student.dob if student.dob else '' }}">
+                <label>Year</label>
+                <select name="year">
+                    {% for i in range(1,5) %}
+                    <option value="{{ i }}" {{ 'selected' if student.year == i|string else '' }}>{{ i }}</option>
+                    {% endfor %}
+                </select>
+                <label>Section</label>
+                <input name="section" value="{{ student.section }}" required>
+                <div style="margin-top:15px;">
+                    <button type="submit" name="update_profile" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideEditForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══ JNTUH RESULTS ═══ -->
+    <div id="jntuh" class="section {{ 'active' if active_tab=='jntuh' else '' }}">
+        <div class="jntuh-dark-container">
+            <!-- Header Pill Badge matching design -->
+            <div class="jntuh-top-pill">
+                Jawaharlal Nehru Technological University, Hyderabad
+            </div>
+
+            <!-- 4-Box Navigation Grid -->
+            <div class="jntuh-cards-grid">
+                <div class="jntuh-nav-card active" id="card-box-1" onclick="switchJntuhBox(1)">
+                    <div class="card-title">Academic Result &rarr;</div>
+                    <div class="card-desc">Access your overall academic performance with just an hallticket.</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-2" onclick="switchJntuhBox(2)">
+                    <div class="card-title">Credit Checker &rarr;</div>
+                    <div class="card-desc">Check your credits to find out how many you need to move on to the next year or to graduate</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-7" onclick="switchJntuhBox(7)">
+                    <div class="card-title">Semester Wise Result &rarr;</div>
+                    <div class="card-desc">Check semester-wise SGPA, total marks, credits, and Regular/Supplementary status</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-3" onclick="switchJntuhBox(3)">
+                    <div class="card-title">Jobs and Careers &rarr;</div>
+                    <div class="card-desc">Explore career paths, find internships, jobs and kickstart your professional journey</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-4" onclick="switchJntuhBox(4)">
+                    <div class="card-title">Syllabus &rarr;</div>
+                    <div class="card-desc">Access detailed syllabus subject wise for your academic year</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-5" onclick="switchJntuhBox(5)">
+                    <div class="card-title">Backlog Report &rarr;</div>
+                    <div class="card-desc">Access your overall backlogs report with an hallticket</div>
+                </div>
+                <div class="jntuh-nav-card" id="card-box-6" onclick="switchJntuhBox(6)">
+                    <div class="card-title">Class Results &rarr;</div>
+                    <div class="card-desc">View the results of your classmates and compare your performance with theirs</div>
+                </div>
+            </div>
+
+            <!-- Feature Panel -->
+            <div class="jntuh-feature-panel">
+                <!-- Search row for Boxes 1, 2, 5 -->
+                <div id="jntuh-input-bar" class="jntuh-search-row">
+                    <div style="flex:1; min-width:180px;">
+                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Hallticket Number</label>
+                        <input type="text" id="jntuh-roll" class="jntuh-input" placeholder="e.g. 21DR1A0501" value="{{ student.student_id | default('') }}">
+                    </div>
+                    <div style="width:170px;">
+                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Date of Birth (Optional)</label>
+                        <input type="text" id="jntuh-dob" class="jntuh-input" placeholder="YYYY/MM/DD" value="{{ student.dob if student.dob else '' }}">
+                    </div>
+                    <div style="width:170px;">
+                        <label style="display:block; font-size:12px; color:#38bdf8; font-weight:600; margin-bottom:6px;">Choose Semester</label>
+                        <select id="jntuh-sem-select" class="jntuh-input" style="cursor:pointer; background:#0d1019; color:#fff;" onchange="onSemesterFilterChange(this.value)">
+                            <option value="all">All Semesters (1-8)</option>
+                            <option value="1">1st Sem (1-1)</option>
+                            <option value="2">2nd Sem (1-2)</option>
+                            <option value="3">3rd Sem (2-1)</option>
+                            <option value="4">4th Sem (2-2)</option>
+                            <option value="5">5th Sem (3-1)</option>
+                            <option value="6">6th Sem (3-2)</option>
+                            <option value="7">7th Sem (4-1)</option>
+                            <option value="8">8th Sem (4-2)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:8px;">
+                        <button class="jntuh-btn" id="jntuh-action-btn" onclick="executeCurrentJntuhFeature(false)">
+                            🎓 Fetch Academic Result
+                        </button>
+                        <button class="jntuh-btn" style="background:#0284c7; color:#fff;" onclick="executeCurrentJntuhFeature(true)" title="Force live fetch from official JNTUH website">
+                            🔄 Live Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loader -->
+                <div id="jntuh-loader">
+                    <div class="jntuh-spinner"></div>
+                    <p style="color:#94a3b8; font-weight:600; margin-top:12px;">Processing JNTUH Request...<br><small style="color:#64748b;">Please wait 1–2 seconds</small></p>
+                </div>
+
+                <!-- Feature Output -->
+                <div id="jntuh-feature-output"></div>
+
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="student-dashboard-root"
+     data-show-password-form="{{ 'true' if pw_error or pw_msg else 'false' }}"
+     data-auto-fetch-jntuh="{{ 'true' if active_tab == 'jntuh' and student and student.student_id else 'false' }}"
+     style="display:none;"></div>
+
+<script>
+function showEditForm() {
+    document.getElementById('profile-view').style.display = 'none';
+    document.getElementById('profile-edit').style.display = 'block';
+    hidePasswordForm();
+}
+function hideEditForm() {
+    document.getElementById('profile-view').style.display = 'block';
+    document.getElementById('profile-edit').style.display = 'none';
+}
+function showPasswordForm() { document.getElementById('password-form').style.display = 'block'; }
+function hidePasswordForm() { document.getElementById('password-form').style.display = 'none'; }
+
+const dashboardRoot = document.getElementById('student-dashboard-root');
+if (dashboardRoot && dashboardRoot.dataset.showPasswordForm === 'true') {
+    showPasswordForm();
+}
+
+/* ═══════════════ JNTUH 6-BOX INTERFACE SCRIPT ═══════════════ */
+let currentActiveBox = 1;
+let cachedJntuhData = null;
+
+function switchJntuhBox(boxNum) {
+    currentActiveBox = boxNum;
+
+    // Update active UI cards state
+    for (let i = 1; i <= 7; i++) {
+        const card = document.getElementById('card-box-' + i);
+        if (card) {
+            if (i === boxNum) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        }
+    }
+
+    const inputBar  = document.getElementById('jntuh-input-bar');
+    const actionBtn = document.getElementById('jntuh-action-btn');
+    const output    = document.getElementById('jntuh-feature-output');
+
+    if (boxNum === 1) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '🎓 Fetch Academic Result';
+        if (cachedJntuhData) {
+            renderAcademicResult(cachedJntuhData);
+        } else {
+            output.innerHTML = `<div class="jntuh-prompt-box">Enter your Hallticket number above and click <strong>Fetch Academic Result</strong> to view complete performance.</div>`;
+        }
+    } else if (boxNum === 2) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '📊 Check Credit Eligibility';
+        if (cachedJntuhData) {
+            renderCreditChecker(cachedJntuhData);
+        } else {
+            output.innerHTML = `<div class="jntuh-prompt-box">Enter your Hallticket number above and click <strong>Check Credit Eligibility</strong> to calculate credits needed for promotion/graduation.</div>`;
+        }
+    } else if (boxNum === 7) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '📋 Check Semester-Wise Results';
+        if (cachedJntuhData) {
+            renderSemesterWiseResultCheck(cachedJntuhData);
+        } else {
+            output.innerHTML = `<div class="jntuh-prompt-box">Enter your Hallticket number above and click <strong>Check Semester-Wise Results</strong> to view semester performance breakdown.</div>`;
+        }
+    } else if (boxNum === 5) {
+        if (inputBar) inputBar.style.display = 'flex';
+        if (actionBtn) actionBtn.textContent = '⚠️ Generate Backlog Report';
+        if (cachedJntuhData) {
+            renderBacklogReport(cachedJntuhData);
+        } else {
+            output.innerHTML = `<div class="jntuh-prompt-box">Enter your Hallticket number above and click <strong>Generate Backlog Report</strong> to inspect failed/backlog subjects.</div>`;
+        }
+    } else if (boxNum === 6) {
+        if (inputBar) inputBar.style.display = 'none';
+        fetchClassResults();
+    } else if (boxNum === 3 || boxNum === 4) {
+        if (inputBar) inputBar.style.display = 'none';
+        const title = boxNum === 3 ? 'Jobs and Careers' : 'Syllabus';
+        output.innerHTML = `
+            <div class="jntuh-notice-box">
+                <div style="font-size:42px; margin-bottom:12px;">🚀</div>
+                <h3 style="margin:0 0 8px; color:#38bdf8; font-size:20px;">${title} Module</h3>
+                <p style="color:#94a3b8; max-width:520px; margin:0 auto 14px; font-size:14px; line-height:1.6;">
+                    This feature is coming soon in the next system update.<br>
+                    Operational features: <strong>Academic Result</strong>, <strong>Credit Checker</strong>, <strong>Semester Wise Result</strong>, <strong>Backlog Report</strong>, and <strong>Class Results</strong>.
+                </p>
+                <button class="jntuh-btn" onclick="switchJntuhBox(1)">Return to Academic Result</button>
+            </div>`;
+    }
+}
+
+function executeCurrentJntuhFeature(forceRefresh = false) {
+    const rollInput = document.getElementById('jntuh-roll');
+    const dobInput  = document.getElementById('jntuh-dob');
+    if (!rollInput) return;
+
+    const roll = rollInput.value.trim().toUpperCase();
+    const dob  = dobInput ? dobInput.value.trim() : '';
+
+    if (!roll || roll.length < 8) {
+        alert('Please enter a valid JNTUH Hallticket Number (e.g. 21DR1A0501)');
+        return;
+    }
+
+    if (!forceRefresh && cachedJntuhData && cachedJntuhData.roll === roll && currentActiveBox !== 1) {
+        if (currentActiveBox === 2) renderCreditChecker(cachedJntuhData);
+        else if (currentActiveBox === 5) renderBacklogReport(cachedJntuhData);
+        else if (currentActiveBox === 7) renderSemesterWiseResultCheck(cachedJntuhData);
+        else renderAcademicResult(cachedJntuhData);
+        return;
+    }
+
+    const btn    = document.getElementById('jntuh-action-btn');
+    const loader = document.getElementById('jntuh-loader');
+    const output = document.getElementById('jntuh-feature-output');
+
+    if (btn) btn.disabled = true;
+    if (loader) loader.style.display = 'block';
+    if (output) output.innerHTML = '';
+
+    const form = new FormData();
+    form.append('roll_number', roll);
+    if (dob) form.append('dob', dob);
+    if (forceRefresh) form.append('force_refresh', '1');
+
+    fetch('/jntuh_results', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+            if (loader) loader.style.display = 'none';
+            if (btn) btn.disabled = false;
+
+            if (!data.success) {
+                if (data.need_dob) {
+                    output.innerHTML = `
+                        <div style="background:#181d2d; border:1px solid #38bdf8; border-radius:14px; padding:28px; text-align:center; max-width:550px; margin:0 auto;">
+                            <div style="font-size:42px; margin-bottom:8px;">📅</div>
+                            <h4 style="color:#ffffff; margin:0 0 8px; font-size:18px;">Date of Birth Required for Live JNTUH Fetch</h4>
+                            <p style="color:#94a3b8; font-size:14px; margin-bottom:18px;">${data.error || 'Please enter Date of Birth in YYYY/MM/DD format to fetch official live results.'}</p>
+                            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                                <input type="text" id="jntuh-inline-dob" class="jntuh-input" style="max-width:260px; color:#fff;" placeholder="YYYY/MM/DD (e.g. 2003/05/15)" value="${dob}">
+                                <button class="jntuh-btn" onclick="const d=document.getElementById('jntuh-inline-dob').value; if(d){ if(document.getElementById('jntuh-dob')) document.getElementById('jntuh-dob').value=d; executeCurrentJntuhFeature(true); } else { alert('Please enter DOB'); }">🎯 Fetch Live Results</button>
+                            </div>
+                        </div>`;
+                    return;
+                }
+                output.innerHTML = `
+                    <div style="background:#181d2d; border:1px solid #ef4444; border-radius:12px; padding:24px; text-align:center; max-width:550px; margin:0 auto;">
+                        <div style="font-size:38px; margin-bottom:8px;">❌</div>
+                        <h4 style="color:#ef4444; margin:0 0 8px; font-size:17px;">Results Not Found</h4>
+                        <p style="color:#94a3b8; font-size:13px; margin:0;">${data.error || 'Invalid Roll Number or DOB. Please verify your Hallticket Number and Date of Birth.'}</p>
+                    </div>`;
+                return;
+            }
+
+            cachedJntuhData = data;
+            if (currentActiveBox === 1) renderAcademicResult(data);
+            else if (currentActiveBox === 2) renderCreditChecker(data);
+            else if (currentActiveBox === 5) renderBacklogReport(data);
+            else if (currentActiveBox === 7) renderSemesterWiseResultCheck(data);
+        })
+        .catch(err => {
+            if (loader) loader.style.display = 'none';
+            if (btn) btn.disabled = false;
+            output.innerHTML = `<div class="jntuh-prompt-box">🔌 Connection error. Please try again.</div>`;
+        });
+}
+
+function onSemesterFilterChange(val) {
+    const select = document.getElementById('jntuh-sem-select');
+    if (select && select.value !== val) select.value = val;
+    if (cachedJntuhData) {
+        if (currentActiveBox === 7) renderSemesterWiseResultCheck(cachedJntuhData);
+        else renderAcademicResult(cachedJntuhData);
+    }
+}
+
+function setSemesterFilter(val) {
+    onSemesterFilterChange(val);
+}
+
+function getSemTabsHtml(selectedSem) {
+    const semMap = {1: '1st Sem (1-1)', 2: '2nd Sem (1-2)', 3: '3rd Sem (2-1)', 4: '4th Sem (2-2)', 5: '5th Sem (3-1)', 6: '6th Sem (3-2)', 7: '7th Sem (4-1)', 8: '8th Sem (4-2)'};
+    let semTabsHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; background:#0d1019; padding:12px; border-radius:12px; border:1px solid #1e2638; align-items:center;">
+        <span style="font-size:12px; font-weight:700; color:#94a3b8; margin-right:4px;">Filter Semester:</span>
+        <button onclick="setSemesterFilter('all')" style="padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; ${selectedSem === 'all' ? 'background:#38bdf8; color:#0b1220;' : 'background:#181d2d; color:#94a3b8; border:1px solid #28334a;'}">All Semesters</button>`;
+    for (let s = 1; s <= 8; s++) {
+        const isSel = String(selectedSem) === String(s);
+        semTabsHtml += `<button onclick="setSemesterFilter('${s}')" style="padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; ${isSel ? 'background:#38bdf8; color:#0b1220;' : 'background:#181d2d; color:#94a3b8; border:1px solid #28334a;'}">${semMap[s]}</button>`;
+    }
+    semTabsHtml += `</div>`;
+    return semTabsHtml;
+}
+
+function getGradeColor(grade, passed) {
+    const g = (grade || '').trim().toUpperCase();
+    if (g === 'O') return '#10b981';
+    if (g === 'A+') return '#0284c7';
+    if (g === 'A') return '#2563eb';
+    if (g === 'B+') return '#7c3aed';
+    if (g === 'B') return '#9333ea';
+    if (g === 'C') return '#d97706';
+    if (g === 'F' || g === 'AB' || g === 'ABSENT' || !passed) return '#dc2626';
+    return '#475569';
+}
+
+function getBranchFullName(roll, dept) {
+    const d = (dept || '').trim().toUpperCase();
+    if (d === 'CSE') return 'Computer Science & Engineering';
+    if (d === 'CSD') return 'Computer Science & Engineering (Data Science)';
+    if (d === 'CSM') return 'Computer Science & Engineering (AI & ML)';
+    if (d === 'ECE') return 'Electronics & Communication Engineering';
+    if (d === 'EEE') return 'Electrical & Electronics Engineering';
+    if (d === 'MECH') return 'Mechanical Engineering';
+    if (d === 'CIVIL') return 'Civil Engineering';
+
+    const r = (roll || '').toUpperCase();
+    if (r.includes('A05') || r.includes('1A05')) return 'Computer Science & Engineering';
+    if (r.includes('A66') || r.includes('1A66')) return 'Computer Science & Engineering (Data Science)';
+    if (r.includes('A67') || r.includes('1A67')) return 'Computer Science & Engineering (AI & ML)';
+    if (r.includes('A04') || r.includes('1A04')) return 'Electronics & Communication Engineering';
+    if (r.includes('A02') || r.includes('1A02')) return 'Electrical & Electronics Engineering';
+    if (r.includes('A03') || r.includes('1A03')) return 'Mechanical Engineering';
+    if (r.includes('A01') || r.includes('1A01')) return 'Civil Engineering';
+    return 'Computer Science & Engineering';
+}
+
+function getCollegeName(roll) {
+    return 'DRK College of Engineering and Technology';
+}
+
+function getSemNotation(sem) {
+    const m = {1: '1-1', 2: '1-2', 3: '2-1', 4: '2-2', 5: '3-1', 6: '3-2', 7: '4-1', 8: '4-2'};
+    return m[sem] || ('Sem ' + sem);
+}
+
+/* ─── Deduplicate and MERGE semester attempts ─────────────────────────
+   JNTUH returns multiple rows for the same semester number when a student
+   appeared in supplementary exams. We merge all subjects across attempts:
+   For each subject, we keep the passed attempt or the best attempt.
+   ─────────────────────────────────────────────────────────────────────── */
+/* ─── Deduplicate and MERGE semester attempts ─────────────────────────
+   JNTUH returns multiple rows for the same semester number when a student
+   appeared in supplementary exams. We merge all subjects across attempts:
+   For each subject, we keep the passed attempt or the best attempt.
+   ─────────────────────────────────────────────────────────────────────── */
+function getBestSemResults(results) {
+    const semMap = {};
+    (results || []).forEach(function(sem) {
+        const semKey = String(sem.semester);
+        if (!semMap[semKey]) {
+            semMap[semKey] = Object.assign({}, sem, { subjects: [], _subjMap: {} });
+        }
+        
+        const currentSem = semMap[semKey];
+        const typeRaw = (sem.type || '').trim().toLowerCase();
+        if (typeRaw === 'regular' || typeRaw === '') {
+            currentSem.type = sem.type;
+            currentSem.examCode = sem.examCode;
+        }
+
+        (sem.subjects || []).forEach(function(sub) {
+            const code = (sub.code || '').trim().toUpperCase();
+            const name = (sub.name || '').trim().toUpperCase();
+            const subKey = code || name;
+            if (!subKey) return;
+
+            if (!currentSem._subjMap[subKey]) {
+                currentSem._subjMap[subKey] = Object.assign({}, sub);
+            } else {
+                const prev = currentSem._subjMap[subKey];
+                const curPassed = sub.passed;
+                const prevPassed = prev.passed;
+                
+                if (curPassed && !prevPassed) {
+                    currentSem._subjMap[subKey] = Object.assign({}, sub);
+                } else if (curPassed === prevPassed) {
+                    const curPts = sub.points || 0;
+                    const prevPts = prev.points || 0;
+                    if (curPts > prevPts) {
+                        currentSem._subjMap[subKey] = Object.assign({}, sub);
+                    }
+                }
+            }
+        });
+    });
+
+    const mergedResults = [];
+    Object.keys(semMap).sort(function(a,b){return Number(a)-Number(b);}).forEach(function(k) {
+        const semObj = semMap[k];
+        semObj.subjects = Object.values(semObj._subjMap);
+        delete semObj._subjMap;
+        
+        let totalCreds = 0;
+        let totalPts = 0;
+        semObj.subjects.forEach(function(s) {
+            if (s.credits > 0) {
+                totalCreds += s.credits;
+                totalPts += s.credits * (s.points || 0);
+            }
+        });
+        semObj.sgpa = totalCreds > 0 ? (totalPts / totalCreds) : 0;
+        semObj.totalCredits = totalCreds;
+        mergedResults.push(semObj);
+    });
+
+    return mergedResults;
+}
+
+
+function renderRefStudentCard(student, idxNum, activeSubTab) {
+    if (typeof renderJntuhMemoView === 'function') {
+        return renderJntuhMemoView(student, {
+            activeTab: activeSubTab || 'official',
+            onTabChange: 'switchSubResultTab'
+        });
+    }
+    return '';
+}
+
+function switchSubResultTab(roll, tabName) {
+    if (cachedJntuhData) {
+        const output = document.getElementById('jntuh-feature-output');
+        if (output) {
+            output.innerHTML = renderRefStudentCard(cachedJntuhData, '', tabName);
+        }
+    }
+}
+
+function renderAcademicResult(data) {
+    const output = document.getElementById('jntuh-feature-output');
+    if (output) {
+        output.innerHTML = renderRefStudentCard(data, '', 'academic');
+    }
+}
+
+/* ═══ BOX 7: SEMESTER WISE RESULT CHECK RENDERER ═══ */
+function renderSemesterWiseResultCheck(data) {
+    const output = document.getElementById('jntuh-feature-output');
+    if (output) {
+        output.innerHTML = renderRefStudentCard(data, '', 'all');
+    }
+}
+
+
+/* ═══ BOX 2: CREDIT CHECKER RENDERER ═══ */
+function renderCreditChecker(data) {
+    const output = document.getElementById('jntuh-feature-output');
+    const totalCredits = data.totalCredits || 0;
+    const degreeTarget = 160; // B.Tech Total Requirement
+    const pct = Math.min(100, roundVal((totalCredits / degreeTarget) * 100, 1));
+    const remaining = Math.max(0, degreeTarget - totalCredits);
+
+    // JNTUH B.Tech Promotion Requirements
+    const p2nd = totalCredits >= 20; // 1st -> 2nd Year
+    const p3rd = totalCredits >= 48; // 2nd -> 3rd Year
+    const p4th = totalCredits >= 72; // 3rd -> 4th Year
+    const grad = totalCredits >= 160;
+
+    let html = `
+    <div class="credit-stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:15px;">
+            <div>
+                <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">Credit Progress &amp; Promotion Eligibility</h3>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Hallticket: <strong>${data.roll}</strong> (${data.name || ''})</p>
+            </div>
+            <div style="text-align:right;">
+                <span style="font-size:28px; font-weight:800; color:#38bdf8;">${totalCredits}</span>
+                <span style="font-size:16px; color:#64748b;"> / ${degreeTarget} Credits</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div style="background:#0d1019; border-radius:10px; height:12px; overflow:hidden; margin-bottom:20px; border:1px solid #28334a;">
+            <div style="width:${pct}%; background:linear-gradient(90deg, #38bdf8, #818cf8); height:100%; border-radius:10px; transition:width 0.5s;"></div>
+        </div>
+
+        <!-- Promotion Stage Cards Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+            <div style="background:#0d1019; border:1px solid ${p2nd ? '#059669' : '#dc2626'}; border-radius:10px; padding:14px;">
+                <div style="font-size:12px; color:#94a3b8; text-transform:uppercase;">1st &rarr; 2nd Year</div>
+                <div style="font-size:15px; font-weight:700; color:${p2nd ? '#34d399' : '#f87171'}; margin-top:4px;">
+                    ${p2nd ? '✅ ELIGIBLE (Min 20 Cr)' : '❌ SHORT BY ' + (20 - totalCredits) + ' CR'}
+                </div>
+            </div>
+            <div style="background:#0d1019; border:1px solid ${p3rd ? '#059669' : '#dc2626'}; border-radius:10px; padding:14px;">
+                <div style="font-size:12px; color:#94a3b8; text-transform:uppercase;">2nd &rarr; 3rd Year</div>
+                <div style="font-size:15px; font-weight:700; color:${p3rd ? '#34d399' : '#f87171'}; margin-top:4px;">
+                    ${p3rd ? '✅ ELIGIBLE (Min 48 Cr)' : '❌ SHORT BY ' + (48 - totalCredits) + ' CR'}
+                </div>
+            </div>
+            <div style="background:#0d1019; border:1px solid ${p4th ? '#059669' : '#dc2626'}; border-radius:10px; padding:14px;">
+                <div style="font-size:12px; color:#94a3b8; text-transform:uppercase;">3rd &rarr; 4th Year</div>
+                <div style="font-size:15px; font-weight:700; color:${p4th ? '#34d399' : '#f87171'}; margin-top:4px;">
+                    ${p4th ? '✅ ELIGIBLE (Min 72 Cr)' : '❌ SHORT BY ' + (72 - totalCredits) + ' CR'}
+                </div>
+            </div>
+            <div style="background:#0d1019; border:1px solid ${grad ? '#059669' : '#38bdf8'}; border-radius:10px; padding:14px;">
+                <div style="font-size:12px; color:#94a3b8; text-transform:uppercase;">Graduation Degree</div>
+                <div style="font-size:15px; font-weight:700; color:${grad ? '#34d399' : '#38bdf8'}; margin-top:4px;">
+                    ${grad ? '🎓 READY TO GRADUATE' : '🎯 NEED ' + remaining + ' MORE CR'}
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    output.innerHTML = html;
+}
+
+/* ═══ ACTIVE BACKLOG CALCULATOR ═══ */
+function getActiveBacklogs(semResults) {
+    if (!semResults || !semResults.length) return [];
+
+    const subjectMap = {};
+
+    semResults.forEach(sem => {
+        (sem.subjects || []).forEach(s => {
+            const code = (s.code || '').trim().toUpperCase();
+            const name = (s.name || '').trim().toUpperCase();
+            const key  = code || name;
+            if (!key) return;
+
+            const isPassed = Boolean(s.passed) || (s.grade && !['F', 'AB', 'ABSENT', 'W', '-', ''].includes(s.grade.toUpperCase().trim()));
+
+            if (!subjectMap[key]) {
+                subjectMap[key] = { cleared: false, lastAttempt: null };
+            }
+
+            if (isPassed) {
+                subjectMap[key].cleared = true;
+            } else if (!subjectMap[key].cleared) {
+                subjectMap[key].lastAttempt = {
+                    semester: sem.semester,
+                    code: s.code || code,
+                    name: s.name || name,
+                    grade: s.grade,
+                    credits: s.credits
+                };
+            }
+        });
+    });
+
+    const activeBacklogs = [];
+    Object.keys(subjectMap).forEach(key => {
+        const item = subjectMap[key];
+        if (!item.cleared && item.lastAttempt) {
+            activeBacklogs.push(item.lastAttempt);
+        }
+    });
+
+    return activeBacklogs;
+}
+
+/* ═══ BOX 5: BACKLOG REPORT RENDERER ═══ */
+function renderBacklogReport(data) {
+    const output = document.getElementById('jntuh-feature-output');
+    const backlogs = getActiveBacklogs(data.results);
+
+    let html = `
+    <div style="background:#181d2d; border:1px solid #28334a; border-radius:14px; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+            <div>
+                <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">⚠️ Active Backlog Report</h3>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Hallticket: <strong>${data.roll}</strong> (${data.name || ''})</p>
+            </div>
+            <div>
+                <span style="padding:6px 16px; border-radius:20px; font-weight:800; font-size:14px; ${backlogs.length > 0 ? 'background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);' : 'background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);'}">
+                    ${backlogs.length > 0 ? backlogs.length + ' Active Backlog(s)' : '✅ 0 Backlogs (Clean Record)'}
+                </span>
+            </div>
+        </div>`;
+
+    if (backlogs.length === 0) {
+        html += `
+        <div style="text-align:center; padding:35px 20px; background:#0d1019; border-radius:12px; border:1px dashed #10b981;">
+            <div style="font-size:42px; margin-bottom:10px;">🎉</div>
+            <h4 style="color:#34d399; margin:0 0 6px; font-size:18px;">All Subjects Cleared!</h4>
+            <p style="color:#94a3b8; margin:0; font-size:14px;">Congratulations, this student has zero active failed subjects.</p>
+        </div>`;
+    } else {
+        html += `
+        <div style="overflow-x:auto;">
+            <table class="sem-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#0f131d; color:#ef4444; text-align:left;">
+                        <th style="padding:12px;">Semester</th>
+                        <th style="padding:12px;">Subject Code</th>
+                        <th style="padding:12px;">Subject Name</th>
+                        <th style="padding:12px;">Last Grade</th>
+                        <th style="padding:12px;">Action Needed</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        backlogs.forEach(b => {
+            html += `
+                <tr style="border-bottom:1px solid #1e2638;">
+                    <td style="padding:12px; font-weight:700; color:#fff;">Semester ${b.semester}</td>
+                    <td style="padding:12px; color:#38bdf8; font-family:monospace;">${b.code}</td>
+                    <td style="padding:12px; color:#e2e8f0;">${b.name}</td>
+                    <td style="padding:12px; color:#f87171; font-weight:700;">${b.grade}</td>
+                    <td style="padding:12px; color:#fbbf24; font-size:13px;">Register for Semester ${b.semester} Supplementary Exam</td>
+                </tr>`;
+        });
+        html += `</tbody></table></div>`;
+    }
+
+    html += `</div>`;
+    output.innerHTML = html;
+}
+
+/* ═══ BOX 6: CLASS RESULTS RENDERER ═══ */
+function fetchClassResults() {
+    const output = document.getElementById('jntuh-feature-output');
+    output.innerHTML = `
+        <div class="jntuh-search-row">
+            <div style="flex:1; min-width:130px;">
+                <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Department</label>
+                <select id="class-dept" class="jntuh-input" style="color:#fff; background:#0d1019;" onchange="loadClassResultsData()">
+                    <option value="">All Departments</option>
+                    <option value="CSE">CSE</option>
+                    <option value="CSD">CSD</option>
+                    <option value="CSM">CSM</option>
+                    <option value="ECE">ECE</option>
+                    <option value="MECH">MECH</option>
+                </select>
+            </div>
+            <div style="flex:1.8; min-width:200px;">
+                <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Search Hallticket / Class Roll (e.g. 23U51A05A6)</label>
+                <input type="text" id="class-search" class="jntuh-input" placeholder="Type Hallticket No (e.g. 23U51A05A6 or 23U51A0501)..." style="color:#fff; background:#0d1019;" onkeyup="if(event.key==='Enter') loadClassResultsData()">
+            </div>
+            <div style="width:170px;">
+                <label style="display:block; font-size:12px; color:#38bdf8; font-weight:600; margin-bottom:6px;">Choose Semester</label>
+                <select id="class-sem-select" class="jntuh-input" style="color:#fff; background:#0d1019; cursor:pointer;" onchange="loadClassResultsData()">
+                    <option value="1">1st Sem (1-1)</option>
+                    <option value="2">2nd Sem (1-2)</option>
+                    <option value="3">3rd Sem (2-1)</option>
+                    <option value="4">4th Sem (2-2)</option>
+                    <option value="5">5th Sem (3-1)</option>
+                    <option value="6">6th Sem (3-2)</option>
+                    <option value="7">7th Sem (4-1)</option>
+                    <option value="8">8th Sem (4-2)</option>
+                    <option value="all">All Semesters</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <button class="jntuh-btn" onclick="loadClassResultsData()">🏆 View Class Results</button>
+            </div>
+        </div>
+        <div id="class-results-content"></div>`;
+
+    loadClassResultsData();
+}
+
+function loadClassResultsData() {
+    const deptElem = document.getElementById('class-dept');
+    const searchElem = document.getElementById('class-search');
+    const semElem = document.getElementById('class-sem-select');
+    const dept = deptElem ? deptElem.value : '';
+    const search = searchElem ? searchElem.value.trim() : '';
+    const selectedSem = semElem ? semElem.value : '1';
+    const container = document.getElementById('class-results-content');
+
+    if (container) container.innerHTML = `<div class="jntuh-spinner" style="margin:30px auto;"></div>`;
+
+    fetch(`/jntuh_class_results?department=${encodeURIComponent(dept)}&search=${encodeURIComponent(search)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!container) return;
+            if (!data.success || !data.students || !data.students.length) {
+                container.innerHTML = `<div class="jntuh-prompt-box">No cached class results found. Enter a valid Hallticket Number (e.g. 23U51A05A6 or 23U51A0501).</div>`;
+                return;
+            }
+
+            const semLabel = selectedSem === 'all' ? 'ALL SEMESTERS' : `SEMESTER ${selectedSem}`;
+            let html = `
+                <div style="text-align:center; padding:18px 0; border-bottom:1px solid #242c42; margin-bottom:24px;">
+                    <h2 style="font-size:26px; font-weight:800; color:#38bdf8; letter-spacing:1.5px; margin:0 0 4px; text-transform:uppercase;">${semLabel} RESULTS</h2>
+                    <div style="font-size:13px; font-weight:700; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">${data.totalStudents} STUDENTS</div>
+                </div>`;
+
+            data.students.forEach((student, idx) => {
+                html += renderRefStudentCard(student, idx + 1, selectedSem);
+            });
+
+            container.innerHTML = html;
+            container.innerHTML = html;
+        });
+}
+
+function roundVal(num, decimals) {
+    return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+// Auto-run Box 1 if JNTUH tab is opened
+if (dashboardRoot && dashboardRoot.dataset.autoFetchJntuh === 'true') {
+    document.addEventListener('DOMContentLoaded', function() {
+        executeCurrentJntuhFeature();
+    });
+}
+</script>
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+</script>
+<script src="/static/jntuh_memo.js"></script>
+<script src="/static/ux.js"></script>
+</body>
+</html>
+

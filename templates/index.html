@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRK Registration Portal – SAMS</title>
+<meta name="description" content="Register as a Student or Faculty at DRK Institute SAMS Portal">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+body{
+    font-family:"Segoe UI", Arial, sans-serif;
+    min-height:100vh;
+    margin:0;
+    background:
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        url("https://imgs.search.brave.com/vdSFvxruLa0l7xZoAT9WmPgtSty5HI22f_4z7Y741ig/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9kcmtp/c3QuaW4vc3RhdGlj/LzIuanBn");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+}
+.container {
+    background: rgba(255,255,255,0.98);
+    padding: 35px;
+    border-radius: 15px;
+    width: 420px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+}
+h1{ color:#e53935; font-size:20px; }
+h2 { text-align:center; margin-bottom:20px; color:#333; }
+.toggle-btn { display:flex; gap:10px; margin-bottom:20px; }
+.toggle-btn button {
+    flex:1; padding:12px; border:none; background:#dfe6e9;
+    cursor:pointer; border-radius:6px; font-weight:bold; transition:0.3s;
+}
+.toggle-btn button.active { background:#2196F3; color:#fff; }
+input, select {
+    width:100%; padding:12px; margin-bottom:15px;
+    border-radius:6px; border:1px solid #ced4da;
+    box-sizing:border-box; font-size:14px;
+}
+.password-wrapper {
+    position:relative; width:100%; margin-bottom:15px;
+}
+.password-wrapper input { margin-bottom:0; padding-right:40px; }
+.password-wrapper .toggle-password {
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    background:transparent; border:none; cursor:pointer; color:#777; font-size:18px; padding:0;
+}
+.password-wrapper .toggle-password:hover{ color:#2196F3; }
+.submit-btn {
+    width:100%; padding:14px; border:none;
+    background:#27ae60; color:white; font-size:16px;
+    font-weight:bold; border-radius:6px; cursor:pointer; transition:background 0.2s;
+}
+.submit-btn:hover { background:#219150; }
+.login-link {
+    margin-top:20px; text-align:center;
+    border-top:1px solid #eee; padding-top:15px;
+}
+.login-link button {
+    background:#e67e22; border:none; padding:10px 25px;
+    color:white; border-radius:6px; cursor:pointer;
+    font-weight:600; transition:background 0.2s;
+}
+.login-link button:hover { background:#cf5f0a; }
+.error{ color:#e53935; text-align:center; margin-bottom:10px; }
+.success{ color:#27ae60; text-align:center; margin-bottom:10px; }
+@media(max-width:768px){
+    body{ justify-content:center; padding:15px; box-sizing:border-box; }
+    .container{ width:100%; max-width:420px; padding:20px; box-sizing:border-box; }
+    h1{ font-size:16px; }
+    h2{ font-size:18px; }
+    .toggle-btn button{ padding:10px 6px; font-size:13px; }
+    input, select{ font-size:15px; padding:11px; }
+    .submit-btn{ font-size:15px; padding:13px; }
+}
+</style>
+<script>
+function toggleForm(role) {
+    const isStudent = (role === 'student');
+    document.getElementById("student-form").style.display = isStudent ? "block" : "none";
+    document.getElementById("faculty-form").style.display = isStudent ? "none" : "block";
+    document.getElementById("student-btn").classList.toggle("active", isStudent);
+    document.getElementById("faculty-btn").classList.toggle("active", !isStudent);
+}
+function togglePassword(button) {
+    const input = button.previousElementSibling;
+    const icon  = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye','fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash','fa-eye');
+    }
+}
+</script>
+</head>
+<body class="sams-layout">
+<div class="container">
+    <h1>DRK Institute of Science Technology</h1>
+    <h2>Create Account</h2>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="success">{{ success }}</div>
+    {% endif %}
+
+    <div class="toggle-btn">
+        <button id="student-btn" class="active" onclick="toggleForm('student')">Student</button>
+        <button id="faculty-btn" onclick="toggleForm('faculty')">Faculty</button>
+    </div>
+
+    <!-- STUDENT FORM -->
+    <form id="student-form" method="post" action="{{ url_for('register') }}">
+        <input type="hidden" name="role" value="student">
+        <input type="text" name="student_id" placeholder="Hall Ticket Number" required>
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
+        <label style="display:block; margin-bottom:5px; font-weight:600; color:#555; font-size:13px; text-align:left;">Date of Birth</label>
+        <input type="date" name="dob" required>
+
+        <select name="department" required>
+            <option value="">-- Select Department --</option>
+            <option value="CSE">CSE</option>
+            <option value="CSD">CSD</option>
+            <option value="CSM">CSM</option>
+            <option value="AI&ML">AI&ML</option>
+            <option value="ECE">ECE</option>
+            <option value="EEE">EEE</option>
+            <option value="MECH">MECH</option>
+            <option value="CIVIL">CIVIL</option>
+            <option value="MBA">MBA</option>
+        </select>
+
+        <select name="year" required>
+            <option value="">-- Select Year --</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+
+        <select name="section" required>
+            <option value="">-- Select Section --</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+        </select>
+
+        <input type="tel" name="phone" placeholder="Phone Number" required>
+
+        <div class="password-wrapper">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword(this)">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <button type="submit" class="submit-btn">Register Student</button>
+    </form>
+
+    <!-- FACULTY FORM -->
+    <form id="faculty-form" method="post" action="{{ url_for('register') }}" style="display:none;">
+        <input type="hidden" name="role" value="faculty">
+        <input type="text" name="faculty_id" placeholder="Faculty Employee ID" required>
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
+        <input type="tel" name="phone" placeholder="Phone Number" required>
+
+        <div class="password-wrapper">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword(this)">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <button type="submit" class="submit-btn">Register Faculty</button>
+    </form>
+
+    <div class="login-link">
+        <p>Already have an account?</p>
+        <form action="{{ url_for('login') }}" method="get" style="margin:0;">
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</div>
+</div>
+<script src="/static/ux.js"></script>
+</body>
+</html>

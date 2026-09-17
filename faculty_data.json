@@ -1,0 +1,20 @@
+
+{
+  "studentList": [],
+  "overallStudents": [],
+  "facultyInfo": {},
+  "assignments": [],
+  "isAccounts": false,
+  "currentFilter": {
+    "dept": "CSE",
+    "year": "3",
+    "sec": "A",
+    "sem": "1",
+    "subj": "General",
+    "assign_id": ""
+  },
+  "examMarksData": {},
+  "feeDataMap": {},
+  "uploadedFiles": [],
+  "examTypeFilter": "mid1"
+}

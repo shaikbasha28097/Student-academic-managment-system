@@ -1,0 +1,77 @@
+<style>
+    .filter-actions-btn {
+        background: #2ecc71;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .filter-actions-btn-auto {
+        margin-left: auto;
+    }
+    .filter-actions-btn-spaced {
+        margin-left: 15px;
+    }
+</style>
+
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+        <form method="GET" style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+            <input type="hidden" name="tab" value="{{ tabName }}">
+            <strong style="margin-right:15px; color:#2c3e50;">Filter by:</strong>
+            
+            <select name="department" onchange="this.form.submit()" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                <option value="">All Departments</option>
+                <option value="CSE" {{ 'selected' if filter_dept == 'CSE' else '' }}>CSE</option>
+                <option value="CSD" {{ 'selected' if filter_dept == 'CSD' else '' }}>CSD</option>
+                <option value="CSM" {{ 'selected' if filter_dept == 'CSM' else '' }}>CSM</option>
+                <option value="AI&ML" {{ 'selected' if filter_dept == 'AI&ML' else '' }}>AI&ML</option>
+                <option value="ECE" {{ 'selected' if filter_dept == 'ECE' else '' }}>ECE</option>
+                <option value="EEE" {{ 'selected' if filter_dept == 'EEE' else '' }}>EEE</option>
+                <option value="MECH" {{ 'selected' if filter_dept == 'MECH' else '' }}>MECH</option>
+                <option value="CIVIL" {{ 'selected' if filter_dept == 'CIVIL' else '' }}>CIVIL</option>
+                <option value="MBA" {{ 'selected' if filter_dept == 'MBA' else '' }}>MBA</option>
+            </select>
+            
+            <select name="year" onchange="this.form.submit()" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                <option value="">All Years</option>
+                <option value="1" {{ 'selected' if filter_year == '1' else '' }}>1st Year</option>
+                <option value="2" {{ 'selected' if filter_year == '2' else '' }}>2nd Year</option>
+                <option value="3" {{ 'selected' if filter_year == '3' else '' }}>3rd Year</option>
+                <option value="4" {{ 'selected' if filter_year == '4' else '' }}>4th Year</option>
+            </select>
+            
+            <select name="section" onchange="this.form.submit()" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                <option value="">All Sections</option>
+                <option value="A" {{ 'selected' if filter_section == 'A' else '' }}>A</option>
+                <option value="B" {{ 'selected' if filter_section == 'B' else '' }}>B</option>
+                <option value="C" {{ 'selected' if filter_section == 'C' else '' }}>C</option>
+                <option value="D" {{ 'selected' if filter_section == 'D' else '' }}>D</option>
+                <option value="E" {{ 'selected' if filter_section == 'E' else '' }}>E</option>
+                <option value="F" {{ 'selected' if filter_section == 'F' else '' }}>F</option>
+                <option value="G" {{ 'selected' if filter_section == 'G' else '' }}>G</option>
+            </select>
+            
+            {% if filter_year == '4' and tabName == 'students' %}
+                <strong style="margin-left:15px; color:#2c3e50;">Semester:</strong>
+                <select name="semester" onchange="this.form.submit()" style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">Select Semester</option>
+                    <option value="7" {{ 'selected' if filter_semester == '7' else '' }}>Sem 7</option>
+                    <option value="8" {{ 'selected' if filter_semester == '8' else '' }}>Sem 8</option>
+                </select>
+                
+                {% if filter_semester == '8' %}
+                    <button type="submit" name="delete_graduated" value="1" onclick="return confirm('WARNING: This will permanently delete ALL students matching the current Department and Section whose Academic Year is over (Year 4, Sem 8)! Are you completely sure?');" class="btn" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; margin-left:auto;">
+                        <i class="fas fa-trash-alt"></i> Delete Graduated Class
+                    </button>
+                {% endif %}
+            {% endif %}
+            
+            {% if tabName in ['attendance', 'exams', 'fees'] %}
+                <button type="submit" name="download_csv" value="1" class="btn filter-actions-btn {{ 'filter-actions-btn-auto' if tabName in ['attendance', 'exams', 'fees'] else 'filter-actions-btn-spaced' }}">
+                    <i class="fas fa-download"></i> Download CSV
+                </button>
+            {% endif %}
+        </form>
+    </div>
