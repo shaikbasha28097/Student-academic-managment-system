@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 90" role="img" aria-labelledby="title">
+  <title id="title">DRK Institute of Science and Technology</title>
+  <g fill="#b40000">
+    <path d="M37 10h13l2 9a31 31 0 0 1 7 3l7-6 9 9-6 7a31 31 0 0 1 3 8l9 2v13l-9 2a31 31 0 0 1-3 8l6 7-9 9-7-6a31 31 0 0 1-7 3l-2 9H37l-2-9a31 31 0 0 1-8-3l-6 6-9-9 6-7a31 31 0 0 1-3-8l-9-2V42l9-2a31 31 0 0 1 3-8l-6-7 9-9 6 6a31 31 0 0 1 8-3l2-9z"/>
+    <circle cx="43" cy="48" r="22" fill="#fff"/>
+    <path d="M43 26a22 22 0 1 0 0 44 22 22 0 0 1 0-44z"/>
+    <path d="M52 28a22 22 0 0 1 0 40c6-10 6-30 0-40z" fill="#fff"/>
+    <text x="75" y="43" font-family="Arial,sans-serif" font-size="35" font-weight="700">DRK</text>
+    <text x="181" y="38" font-family="Arial,sans-serif" font-size="25" font-weight="700">Institute of</text>
+    <text x="181" y="66" font-family="Arial,sans-serif" font-size="25" font-weight="700">Science and Technology</text>
+  </g>
+  <text x="181" y="83" fill="#202020" font-family="Arial,sans-serif" font-size="8" font-weight="700">Affiliated to JNTUH | Accredited to NAAC | Approved by AICTE</text>
+</svg>

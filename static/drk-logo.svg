@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">DRK Institute logo</title>
+  <desc id="desc">Teal gear and gold college emblem</desc>
+  <path fill="#087d70" d="M53 8h14l2 10a43 43 0 0 1 10 4l7-7 10 10-7 8a43 43 0 0 1 5 10l10 1v14l-10 2a43 43 0 0 1-4 11l7 7-10 10-8-7a43 43 0 0 1-10 5l-1 10H54l-2-10a43 43 0 0 1-11-4l-7 7-10-10 7-8a43 43 0 0 1-5-10l-10-1V47l10-2a43 43 0 0 1 4-11l-7-7 10-10 8 7a43 43 0 0 1 10-5l2-11z"/>
+  <circle cx="59" cy="53" r="31" fill="#fff"/>
+  <path d="M61 24a29 29 0 1 0 0 58" fill="none" stroke="#087d70" stroke-width="12" stroke-linecap="butt"/>
+  <path fill="#d6a32a" d="M64 25a29 29 0 0 1 0 56c8-14 8-42 0-56z"/>
+</svg>

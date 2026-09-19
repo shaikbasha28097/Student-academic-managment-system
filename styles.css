@@ -1491,6 +1491,7 @@ html, body { overflow-x: hidden; }
 .cmm-sem-column {
   flex: 1;
   border-right: 1.5px solid #203f1e;
+  background: #fbfdf9;
 }
 
 .cmm-sem-column:last-child {
@@ -1512,6 +1513,12 @@ html, body { overflow-x: hidden; }
   border-collapse: collapse;
   font-size: 10.5px;
   line-height: 1.2;
+  background: #fbfdf9;
+}
+
+.cmm-grid-table tbody,
+.cmm-grid-table tr {
+  background: #fbfdf9;
 }
 
 .cmm-grid-table th {
@@ -1536,6 +1543,7 @@ html, body { overflow-x: hidden; }
   color: #000;
   font-weight: 600;
   vertical-align: middle;
+  background: #fbfdf9;
 }
 
 .cmm-grid-table td:last-child {

@@ -8,7 +8,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* ── Use shared SAMS design system from styles.css ── */
+        /* ── Use the shared dashboard design system from styles.css ── */
         * { box-sizing: border-box; }
         html, body { overflow-x: hidden; }
         body {
@@ -450,7 +450,7 @@
             <div class="brand-icon"><i class="fas fa-shield-alt"></i></div>
             <div class="brand-text">
                 <div class="brand-name">Admin Panel</div>
-                <div class="brand-sub">SAMS 4th Year</div>
+                <div class="brand-sub">Student Academic Management System</div>
             </div>
         </div>
         <div class="sidebar-section-label" style="padding:14px 18px 4px; font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; text-transform:uppercase;">Management</div>
@@ -479,6 +479,12 @@
         <a href="?tab=timetable" class="{{ 'active' if active_tab == 'timetable' else '' }}">
             <i class="fas fa-clock"></i> Time Table
         </a>
+        <a href="?tab=material" class="{{ 'active' if active_tab == 'material' else '' }}">
+            <i class="fas fa-book"></i> Course Material
+        </a>
+        <a href="?tab=calendar" class="{{ 'active' if active_tab == 'calendar' else '' }}">
+            <i class="fas fa-calendar-alt"></i> Academic Calendar
+        </a>
         <div class="sidebar-section-label" style="padding:14px 18px 4px; font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; text-transform:uppercase;">Results</div>
         <a href="?tab=jntuh" class="{{ 'active' if active_tab == 'jntuh' else '' }}" style="color:#60a5fa; font-weight:700;">
             <i class="fas fa-graduation-cap"></i> JNTUH Results
@@ -488,16 +494,6 @@
     <div class="main-content" id="mainContent">
         <div class="header">
             <h1>Dashboard</h1>
-                        <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
-                <option value="en">English</option>
-                <option value="hi">हिन्दी</option>
-            </select>
-            <script src="/static/common.js"></script>
-            <select id="langSelect" onchange="setLanguage(this.value)" style="margin-left:auto; padding:5px 10px; border-radius:5px; border:none; background:#f1f5f9;">
-    <option value="en">English</option>
-    <option value="hi">हिन्दी</option>
-</select>
-<script src="/static/common.js"></script>
 <div class="user-info">
                 <span class="user-chip"><i class="fas fa-user-shield"></i> {{ admin_id }}</span>
                 <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -1000,7 +996,7 @@
                             </button>
                         </div>
                     </form>
-                    {% if timetable_list %}
+                    {% if timetable_data %}
                     <table>
                         <thead>
                             <tr><th>Dept</th><th>Year</th><th>Sec</th><th>Sem</th><th>File</th><th>Actions</th></tr>
@@ -1011,8 +1007,8 @@
                                 <td>{{ tt.department }}</td>
                                 <td>{{ tt.year }}</td>
                                 <td>{{ tt.section }}</td>
-                                <td>{{ tt.semester }}</td>
-                                <td><a href="/uploads/{{ tt.filename }}" target="_blank">View</a></td>
+                                <td>{{ tt.semester or '-' }}</td>
+                                <td><a href="{{ url_for('uploaded_file', filename=tt.file_path) }}" target="_blank">{{ tt.title }}</a></td>
                                 <td>
                                     <form method="POST" style="display:inline;" onsubmit="return confirm('Delete timetable?')">
                                         <input type="hidden" name="delete_tt_id" value="{{ tt.id }}">
@@ -1024,6 +1020,42 @@
                         </tbody>
                     </table>
                     {% endif %}
+                </div>
+
+            {% elif active_tab in ('material', 'calendar') %}
+                {% set file_category = 'course_material' if active_tab == 'material' else 'academic_calendar' %}
+                {% set file_rows = material_data if active_tab == 'material' else calendar_data %}
+                {% set file_heading = 'Course Material' if active_tab == 'material' else 'Academic Calendar' %}
+                <div class="sams-card">
+                    <div class="sams-card-header">
+                        <h3 class="sams-card-title"><i class="fas {{ 'fa-book' if active_tab == 'material' else 'fa-calendar-alt' }}"></i> {{ file_heading }}</h3>
+                    </div>
+                    <div class="sams-card-body" style="padding:22px;">
+                        <form method="POST" enctype="multipart/form-data" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:22px;">
+                            <input type="hidden" name="file_category" value="{{ file_category }}">
+                            <div><label>Title</label><input name="file_title" required placeholder="Document title" class="sams-select"></div>
+                            <div><label>Department</label><select name="file_department" required class="sams-select">{% for d in ['CSE','CSD','CSM','AI&ML','ECE','EEE','MECH','CIVIL','MBA'] %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
+                            <div><label>Year</label><select name="file_year" required class="sams-select">{% for y in range(1,5) %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}</select></div>
+                            <div><label>Section</label><select name="file_section" class="sams-select"><option value="All">All Sections</option>{% for s in ['A','B','C','D','E','F','G'] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+                            <div><label>File</label><input type="file" name="department_file" required></div>
+                            <button type="submit" name="upload_department_file" class="sams-btn blue"><i class="fas fa-upload"></i> Upload</button>
+                        </form>
+                        <table class="sams-table">
+                            <thead><tr><th>Title</th><th>Class</th><th>Uploaded</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            {% for file in file_rows %}
+                                <tr>
+                                    <td><a href="{{ url_for('uploaded_file', filename=file.file_path) }}" target="_blank">{{ file.title }}</a></td>
+                                    <td>{{ file.department }} / Year {{ file.year }} / {{ file.section }}</td>
+                                    <td>{{ file.uploaded_at }}</td>
+                                    <td><a class="sams-btn-icon red" title="Delete" href="{{ url_for('admin_dashboard', delete_department_file=file.id, category=file_category) }}" onclick="return confirm('Delete this file?')"><i class="fas fa-trash"></i></a></td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" style="text-align:center;padding:30px;color:#9ca3af;">No files uploaded yet.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             {% elif active_tab == 'jntuh' %}
@@ -1459,8 +1491,16 @@ function adminGetBestSemResults(results) {
 }
 
 function renderRefStudentCard(student, idxNum, activeSubTab) {
+    if (typeof renderJntuhMemoView === 'function') {
+        const memoTab = activeSubTab === 'academic' ? 'official' : (activeSubTab === 'all' ? 'cards' : activeSubTab);
+        return renderJntuhMemoView(student, {
+            activeTab: memoTab,
+            onTabChange: 'adminSwitchSubResultTab'
+        });
+    }
+
     const roll = student.student_id || student.roll || '';
-    const name = (student.name || student.student_name || roll || '').toUpperCase();
+    const name = (student.jntuh_name || student.name || student.student_name || '').toUpperCase();
     const college = getCollegeName(roll);
     const branch = getBranchFullName(roll, student.department);
 
@@ -1515,7 +1555,6 @@ function renderRefStudentCard(student, idxNum, activeSubTab) {
             <div class="res-profile-top">
                 <div class="res-student-info">
                     <div class="res-student-name">${name}</div>
-                    <div class="res-roll-number">${roll}</div>
                     <div class="res-branch-name">${branch}</div>
                     <div class="res-college-name">${college}</div>
                 </div>
@@ -1709,6 +1748,7 @@ function adminFetchJntuhResult(forceLive) {
         });
 }
 </script>
+<script src="/static/jntuh_memo.js"></script>
 
 </body>
 </html>

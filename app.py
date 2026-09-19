@@ -38,7 +38,7 @@ os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 @app.route("/uploads/<path:filename>")
 def serve_uploads(filename):
     """Serve uploaded files (timetable, materials, academic calendar, etc.)."""
-    return send_from_directory(config.UPLOAD_FOLDER, filename)
+    return send_from_directory(config.UPLOAD_FOLDER, os.path.basename(filename))
 
 
 # Custom JSON encoder to handle Decimal and Datetime types globally
@@ -492,14 +492,25 @@ def require_role(role):
 # ════════════════════════════════════════════════════════════════
 
 @app.route("/")
+def home_page():
+    return render_template("index.html")
+
+
+@app.route("/register_page")
 def register_page():
     error = request.args.get("error", "")
     success = request.args.get("success", "")
-    return render_template("index.html", error=error, success=success)
+    return render_template("Register.html", error=error, success=success)
 
 
-@app.route("/register", methods=["POST"])
+@app.route("/register", methods=["GET", "POST"])
+@app.route("/register/", methods=["GET", "POST"])
 def register():
+    if request.method == "GET":
+        error = request.args.get("error", "")
+        success = request.args.get("success", "")
+        return render_template("Register.html", error=error, success=success)
+
     role        = request.form.get("role", "")
     name        = request.form.get("name", "").strip()
     email       = request.form.get("email", "").strip()
@@ -612,6 +623,55 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _normalize_jntuh_results(results):
+    """Return a stable subject schema without mixing student and subject fields."""
+    normalized = []
+    for semester in results or []:
+        subjects = []
+        for subject in semester.get('subjects', []):
+            code = str(subject.get('code') or subject.get('subject_code') or '').strip().upper()
+            name = str(subject.get('name') or subject.get('subject_name') or '').strip()
+            marks = str(subject.get('marks') or subject.get('total') or subject.get('total_marks') or '').strip()
+            internal = str(subject.get('internal') or subject.get('int_marks') or '').strip()
+            external = str(subject.get('external') or subject.get('ext_marks') or '').strip()
+            grade = str(subject.get('grade') or '').strip().upper()
+            credits = subject.get('credits', 0)
+            passed = subject.get('passed')
+            if passed is None:
+                passed = grade not in {'F', 'AB', 'ABSENT', 'W', '--', ''}
+            result = str(subject.get('result') or subject.get('status') or ('PASS' if passed else 'FAIL')).strip().upper()
+            subjects.append({
+                **subject,
+                'code': code,
+                'subject_code': code,
+                'name': name,
+                'subject_name': name,
+                'marks': marks,
+                'internal': internal,
+                'external': external,
+                'grade': grade,
+                'credits': credits,
+                'passed': bool(passed),
+                'result': result,
+            })
+        normalized.append({**semester, 'subjects': subjects})
+    return normalized
+
+
+def _sync_jntuh_student_name(roll_number, student_name):
+    """Keep the registered student name aligned with the official JNTUH name."""
+    clean_name = str(student_name or '').strip()
+    if not clean_name or not roll_number:
+        return
+    if re.fullmatch(r'\d{2}[A-Z0-9]{6,}', clean_name, re.IGNORECASE):
+        return
+    query(
+        "UPDATE students SET name=%s WHERE student_id=%s",
+        (clean_name, roll_number),
+        commit=True,
+    )
+
+
 @app.route("/jntuh_results", methods=["POST"])
 def jntuh_results():
     """Fetch JNTUH results for a roll number. Uses MySQL cache (24h) then live Playwright scrape."""
@@ -631,9 +691,27 @@ def jntuh_results():
                 "SELECT * FROM jntuh_cache WHERE roll_number=%s AND (expires_at IS NULL OR expires_at > NOW())",
                 (roll,), one=True
             )
-            if cached and cached.get('results_json'):
+            cached_name = str(cached.get('student_name') or '').strip() if cached else ''
+            cached_name_is_roll = bool(re.fullmatch(r'\d{2}[A-Z0-9]{6,}', cached_name, re.IGNORECASE))
+            if cached and cached.get('results_json') and cached_name and not cached_name_is_roll:
                 results_data = _json.loads(cached['results_json'])
+                cached_subjects = [
+                    subject
+                    for semester in results_data
+                    for subject in semester.get('subjects', [])
+                ]
+                cached_schema_valid = bool(cached_subjects) and all(
+                    str(subject.get('code') or subject.get('subject_code') or '').strip()
+                    and str(subject.get('name') or subject.get('subject_name') or '').strip()
+                    and str(subject.get('marks') or subject.get('total') or subject.get('total_marks') or '').strip()
+                    and str(subject.get('grade') or '').strip()
+                    and subject.get('credits') is not None
+                    for subject in cached_subjects
+                )
+                if not cached_schema_valid:
+                    raise ValueError('Cached JNTUH results do not contain the complete subject schema')
                 cgpa_summary = jntuh_scraper._compute_cgpa(results_data)
+                _sync_jntuh_student_name(roll, cached['student_name'])
                 fetched_str = (
                     cached['fetched_at'].isoformat()
                     if hasattr(cached.get('fetched_at'), 'isoformat')
@@ -644,11 +722,12 @@ def jntuh_results():
                     'cached': True,
                     'roll': cached['roll_number'],
                     'name': cached['student_name'],
+                    'jntuh_name': cached['student_name'],
                     'cgpa': cgpa_summary['cgpa'],
                     'totalCredits': cgpa_summary['totalCredits'],
                     'backlogsCount': cgpa_summary['backlogsCount'],
                     'semCount': cached['sem_count'],
-                    'results': results_data,
+                    'results': _normalize_jntuh_results(results_data),
                     'fetched_at': fetched_str,
                     'developer': 'thilakreddypothuganti@gmail.com',
                     'poweredBy': 'jntuhconnect.dhethi.com'
@@ -694,7 +773,8 @@ def jntuh_results():
 
     # 5. Save to cache
     try:
-        results_json = _json.dumps(res.get('results', []))
+        res['results'] = _normalize_jntuh_results(res.get('results', []))
+        results_json = _json.dumps(res['results'])
         expires_at = datetime.now() + timedelta(days=1)
         query(
             """
@@ -725,6 +805,8 @@ def jntuh_results():
         pass
 
     res['cached'] = False
+    res['jntuh_name'] = res.get('name', '')
+    _sync_jntuh_student_name(roll, res.get('name', ''))
     res['developer'] = 'thilakreddypothuganti@gmail.com'
     res['poweredBy'] = 'jntuhconnect.dhethi.com'
     return jsonify(res)
@@ -746,7 +828,7 @@ def jntuh_class_results():
         roll_prefix = clean_search[:8] if len(clean_search) >= 8 else clean_search
         cached_students = query(
             """
-            SELECT roll_number as student_id, student_name as name, 'CSE' as department, '4' as year, 'A' as section,
+            SELECT roll_number as student_id, student_name as name, student_name as jntuh_name, 'CSE' as department, '4' as year, 'A' as section,
                 cgpa, total_credits, sem_count, results_json, fetched_at
             FROM jntuh_cache
             WHERE roll_number LIKE %s
@@ -757,7 +839,7 @@ def jntuh_class_results():
 
         db_students = query(
             """
-            SELECT s.student_id, s.name, s.department, s.year, s.section,
+            SELECT s.student_id, COALESCE(c.student_name, s.name) as name, c.student_name as jntuh_name, s.department, s.year, s.section,
                 COALESCE(c.cgpa, 0) as cgpa, COALESCE(c.total_credits, 0) as total_credits,
                 COALESCE(c.sem_count, 0) as sem_count, c.results_json, c.fetched_at
             FROM students s
@@ -780,7 +862,7 @@ def jntuh_class_results():
     # 2. If no search or empty search results, query by dept/year/section
     if not students:
         sql = """
-            SELECT s.student_id, s.name, s.department, s.year, s.section,
+            SELECT s.student_id, COALESCE(c.student_name, s.name) as name, c.student_name as jntuh_name, s.department, s.year, s.section,
                 COALESCE(c.cgpa, 0) as cgpa, COALESCE(c.total_credits, 0) as total_credits,
                 COALESCE(c.sem_count, 0) as sem_count, c.results_json, c.fetched_at
             FROM students s
@@ -800,11 +882,12 @@ def jntuh_class_results():
         sql += " ORDER BY s.student_id ASC"
         students = query(sql, tuple(params), fetchall=True) or []
 
-    # 3. Fallback to all cached if still empty
-    if not students:
+    # 3. Only show all cached records when no hall ticket filter was supplied.
+    # An unmatched hall ticket must not expose every cached student's result.
+    if not students and not search and not dept and not year and not section:
         students = query(
             """
-            SELECT roll_number as student_id, student_name as name, 'CSE' as department, '4' as year, 'A' as section,
+            SELECT roll_number as student_id, student_name as name, student_name as jntuh_name, 'CSE' as department, '4' as year, 'A' as section,
                 cgpa, total_credits, sem_count, results_json, fetched_at
             FROM jntuh_cache
             ORDER BY roll_number ASC
@@ -1164,8 +1247,10 @@ def faculty_dashboard():
         rec = query("SELECT file_path FROM department_files WHERE id=%s", (file_id,), one=True)
         if rec:
             fp = rec["file_path"]
-            if os.path.exists(fp):
-                os.remove(fp)
+            for candidate in (fp, os.path.join(config.UPLOAD_FOLDER, os.path.basename(fp))):
+                if os.path.exists(candidate):
+                    os.remove(candidate)
+                    break
             query("DELETE FROM department_files WHERE id=%s", (file_id,), commit=True)
         return redirect(url_for("faculty_dashboard", active_section=section_origin))
 
@@ -1196,7 +1281,7 @@ def faculty_dashboard():
             query(
                 "INSERT INTO department_files (title, file_path, file_type, department, year, section, category) "
                 "VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (title, target_path, ext, dept, yr, sec, category), commit=True,
+                (title, filename, ext, dept, yr, sec, category), commit=True,
             )
         return redirect(url_for("faculty_dashboard", active_section=active_sec, department=dept, year=yr, section=sec))
 
@@ -1855,9 +1940,52 @@ def admin_dashboard():
             query(
                 "INSERT INTO department_files (title, file_path, file_type, department, year, section, category) "
                 "VALUES (%s,%s,%s,%s,%s,%s,'timetable')",
-                (title, target_path, ext, dept, yr, section), commit=True,
+                (title, filename, ext, dept, yr, section), commit=True,
             )
         return redirect(url_for("admin_dashboard", tab="timetable", msg="Uploaded"))
+
+    # ── POST: Upload Course Material or Academic Calendar ────
+    if request.method == "POST" and "upload_department_file" in request.form:
+        category = request.form.get("file_category", "")
+        if category not in ("course_material", "academic_calendar"):
+            return redirect(url_for("admin_dashboard", tab="students", msg="Invalid+File+Category"))
+        dept = request.form.get("file_department", "")
+        yr = request.form.get("file_year", "")
+        section = request.form.get("file_section", "All") or "All"
+        title = request.form.get("file_title", "").strip()
+        file = request.files.get("department_file")
+        if file and file.filename and allowed_file(file.filename):
+            os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
+            filename = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
+            file.save(os.path.join(config.UPLOAD_FOLDER, filename))
+            ext = filename.rsplit(".", 1)[1].lower() if "." in filename else ""
+            query(
+                "INSERT INTO department_files (title, file_path, file_type, department, year, section, category) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                (title or secure_filename(file.filename), filename, ext, dept, yr, section, category),
+                commit=True,
+            )
+        tab = "material" if category == "course_material" else "calendar"
+        return redirect(url_for("admin_dashboard", tab=tab, msg="Uploaded"))
+
+    # ── GET: Delete Course Material or Academic Calendar ─────
+    if "delete_department_file" in request.args:
+        file_id = request.args.get("delete_department_file")
+        category = request.args.get("category", "course_material")
+        rec = query("SELECT file_path FROM department_files WHERE id=%s AND category=%s", (file_id, category), one=True)
+        if rec:
+            file_path = rec.get("file_path", "")
+            candidates = [file_path, os.path.join(config.UPLOAD_FOLDER, os.path.basename(file_path))]
+            for candidate in candidates:
+                if os.path.exists(candidate):
+                    try:
+                        os.remove(candidate)
+                    except OSError:
+                        pass
+                    break
+            query("DELETE FROM department_files WHERE id=%s AND category=%s", (file_id, category), commit=True)
+        tab = "material" if category == "course_material" else "calendar"
+        return redirect(url_for("admin_dashboard", tab=tab, msg="Deleted"))
 
     # ── GET: Delete Timetable ─────────────────────────────────
     if "delete_timetable" in request.args:
@@ -1885,6 +2013,8 @@ def admin_dashboard():
     exam_data       = []
     fee_data        = []
     timetable_data  = []
+    material_data   = []
+    calendar_data   = []
 
     # Build attendance map for all students
     att_map = {}
@@ -1965,6 +2095,20 @@ def admin_dashboard():
         sql += " ORDER BY uploaded_at DESC"
         timetable_data = query(sql, tuple(params), fetchall=True)
 
+    elif active_tab in ("material", "calendar"):
+        category = "course_material" if active_tab == "material" else "academic_calendar"
+        sql = "SELECT * FROM department_files WHERE category=%s"
+        params = [category]
+        if filter_dept:    sql += " AND department=%s"; params.append(filter_dept)
+        if filter_year:    sql += " AND year=%s";       params.append(filter_year)
+        if filter_section: sql += " AND section=%s";    params.append(filter_section)
+        sql += " ORDER BY uploaded_at DESC"
+        files = query(sql, tuple(params), fetchall=True)
+        if active_tab == "material":
+            material_data = files
+        else:
+            calendar_data = files
+
     # ── CSV Download ──────────────────────────────────────────
     if request.args.get("download_csv") == "1":
         output   = io.StringIO()
@@ -2025,6 +2169,8 @@ def admin_dashboard():
         exam_data=exam_data,
         fee_data=fee_data,
         timetable_data=timetable_data,
+        material_data=material_data,
+        calendar_data=calendar_data,
         allowed_students_list=allowed_students_list,
         att_map=att_map,
         admin_id=session.get("user_id"),
@@ -2034,7 +2180,7 @@ def admin_dashboard():
 # ── Serve uploaded files ──────────────────────────────────────
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
-    return send_file(os.path.join(config.UPLOAD_FOLDER, filename))
+    return send_file(os.path.join(config.UPLOAD_FOLDER, os.path.basename(filename)))
 
 
 # ── JNTUH Results API Route ───────────────────────────────────
@@ -2153,7 +2299,7 @@ def parse_jntuh_html(html, meta):
             continue
             
         header_cells = rows[0].find_all(['td', 'th'])
-        headers = [c.get_text().strip().lower() for c in header_cells]
+        headers = [c.get_text(' ', strip=True).lower() for c in header_cells]
         
         is_result_table = any('grade' in h or 'subject' in h or 'credits' in h for h in headers)
         if not is_result_table:
@@ -2161,18 +2307,31 @@ def parse_jntuh_html(html, meta):
             
         sub_code_idx = -1
         sub_name_idx = -1
+        total_idx = -1
         grade_idx = -1
         credits_idx = -1
+        result_idx = -1
+        internal_idx = -1
+        external_idx = -1
         
         for idx, h in enumerate(headers):
-            if 'sub code' in h or 'code' == h:
+            header_key = re.sub(r'[^a-z]', '', h)
+            if header_key in {'subjectcode', 'subcode', 'coursecode', 'code'}:
                 sub_code_idx = idx
-            if 'subject name' in h or 'subject' in h:
+            if header_key in {'subjectname', 'subname', 'coursename', 'subject'}:
                 sub_name_idx = idx
-            if 'grade' in h and 'point' not in h:
+            if header_key in {'total', 'totalmarks', 'marks', 'mark'}:
+                total_idx = idx
+            if 'grade' in header_key and 'point' not in header_key:
                 grade_idx = idx
-            if 'credit' in h:
+            if 'credit' in header_key:
                 credits_idx = idx
+            if header_key in {'result', 'status', 'passfail'}:
+                result_idx = idx
+            if 'internal' in header_key or header_key.startswith('int'):
+                internal_idx = idx
+            if 'external' in header_key or header_key.startswith('ext'):
+                external_idx = idx
                 
         if sub_name_idx == -1 and grade_idx == -1:
             continue
@@ -2200,8 +2359,12 @@ def parse_jntuh_html(html, meta):
                 
             sub_code = cell_texts[sub_code_idx] if 0 <= sub_code_idx < len(cell_texts) else ""
             sub_name = cell_texts[sub_name_idx] if 0 <= sub_name_idx < len(cell_texts) else ""
+            total_marks = cell_texts[total_idx] if 0 <= total_idx < len(cell_texts) else ""
             grade = cell_texts[grade_idx] if 0 <= grade_idx < len(cell_texts) else ""
             credits = cell_texts[credits_idx] if 0 <= credits_idx < len(cell_texts) else ""
+            result_status = cell_texts[result_idx].strip().upper() if 0 <= result_idx < len(cell_texts) else ""
+            internal = cell_texts[internal_idx] if 0 <= internal_idx < len(cell_texts) else ""
+            external = cell_texts[external_idx] if 0 <= external_idx < len(cell_texts) else ""
             
             if not sub_name or sub_name.lower() == 'subject name':
                 continue
@@ -2222,12 +2385,20 @@ def parse_jntuh_html(html, meta):
                 cred_num = float(credits)
             except ValueError:
                 cred_num = 0.0
+
+            if not result_status:
+                result_status = 'PASS' if grade_upper not in ['F', 'AB', 'ABSENT', 'W', '--', ''] else 'FAIL'
                 
             subjects.append({
                 'code': sub_code,
                 'name': sub_name,
+                'marks': total_marks,
+                'total': total_marks,
+                'internal': internal,
+                'external': external,
                 'grade': grade if grade else '-',
                 'credits': cred_num,
+                'result': result_status,
                 'points': points,
                 'passed': grade_upper not in ['F', 'AB', 'ABSENT', 'W', '--']
             })

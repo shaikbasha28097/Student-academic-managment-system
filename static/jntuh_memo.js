@@ -78,7 +78,7 @@
 
             const currentSem = semMap[semKey];
             (sem.subjects || []).forEach(function (sub) {
-                const code = (sub.code || '').trim().toUpperCase();
+                const code = String(sub.code || sub.subject_code || sub.subjectCode || sub.course_code || '').trim().toUpperCase();
                 const name = (sub.name || '').trim().toUpperCase();
                 const subKey = code || name;
                 if (!subKey) return;
@@ -87,12 +87,23 @@
                 const subPts = sub.points !== undefined ? sub.points : getGradePoint(sub.grade, subPassed);
                 const subCreds = parseFloat(sub.credits) || 0;
 
+                const internal = sub.internal ?? sub.int_marks ?? sub.internal_marks ?? '';
+                const external = sub.external ?? sub.ext_marks ?? sub.external_marks ?? '';
+                let marks = sub.marks ?? sub.total ?? sub.total_marks ?? '';
+                if (marks === '' && internal !== '' && external !== '' && !isNaN(Number(internal)) && !isNaN(Number(external))) {
+                    marks = Number(internal) + Number(external);
+                }
+
                 const subjObj = {
                     code: code || '—',
                     name: name || 'SUBJECT',
+                    marks: marks,
+                    internal: internal,
+                    external: external,
                     grade: (sub.grade || (subPassed ? 'P' : 'F')).toUpperCase(),
                     points: subPts,
                     credits: subCreds,
+                    result: String(sub.result || sub.status || (subPassed ? 'PASS' : 'FAIL')).toUpperCase(),
                     passed: subPassed,
                     internal: sub.internal !== undefined ? sub.internal : '',
                     external: sub.external !== undefined ? sub.external : ''
@@ -157,8 +168,7 @@
         options = options || {};
         const activeTab = options.activeTab || 'official'; // 'official' | 'cards' | 'backlogs' | 'credits'
         const roll = (data.student_id || data.roll || '').toUpperCase();
-        const name = (data.name || data.student_name || roll || 'STUDENT NAME').toUpperCase();
-        const fatherName = (data.fatherName || data.father_name || 'SHAIK MAHABOOB VALI').toUpperCase();
+        const name = (data.jntuh_name || data.name || data.student_name || 'STUDENT NAME').trim().toUpperCase();
         const collegeName = getCollegeName(roll);
         const collegeCode = getCollegeCode(roll);
         const branchName = getBranchFullName(roll, data.department);
@@ -267,7 +277,6 @@
                             <div class="cmm-info-col">
                                 <div class="cmm-info-line"><span class="cmm-lbl">Name</span><span class="cmm-sep">:</span><span class="cmm-val name-val">${name}</span></div>
                                 <div class="cmm-info-line"><span class="cmm-lbl">Hall Ticket No.</span><span class="cmm-sep">:</span><span class="cmm-val roll-val">${roll}</span></div>
-                                <div class="cmm-info-line"><span class="cmm-lbl">Father Name</span><span class="cmm-sep">:</span><span class="cmm-val">${fatherName}</span></div>
                                 <div class="cmm-info-line"><span class="cmm-lbl">College Code</span><span class="cmm-sep">:</span><span class="cmm-val">${collegeCode}</span></div>
                             </div>
                             <div class="cmm-info-col">
@@ -300,11 +309,13 @@
                             <table class="cmm-grid-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:18%;">SUBJECT CODE</th>
-                                        <th style="width:50%;">SUBJECT TITLE</th>
-                                        <th style="width:10%;">GRADE POINT</th>
+                                        <th style="width:16%;">SUBJECT CODE</th>
+                                        <th style="width:42%;">SUBJECT TITLE</th>
+                                        <th style="width:8%;">INT.</th>
+                                        <th style="width:8%;">EXT.</th>
+                                        <th style="width:8%;">TOTAL</th>
                                         <th style="width:10%;">GRADE</th>
-                                        <th style="width:12%;">CREDITS</th>
+                                        <th style="width:8%;">CR.</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
@@ -316,13 +327,15 @@
                                     <tr class="${isFail ? 'row-failed' : ''}">
                                         <td class="col-code">${sub.code}</td>
                                         <td class="col-title">${sub.name}</td>
-                                        <td class="col-center">${isFail ? '' : sub.points}</td>
+                                        <td class="col-center">${sub.internal}</td>
+                                        <td class="col-center">${sub.external}</td>
+                                        <td class="col-center">${sub.marks}</td>
                                         <td class="col-center grade-cell ${isFail ? 'fail-txt' : ''}">${sub.grade}</td>
                                         <td class="col-right">${sub.credits.toFixed(1)}</td>
                                     </tr>`;
                     });
                 } else {
-                    html += `<tr><td colspan="5" class="empty-sem-row">Results Not Released / Available</td></tr>`;
+                    html += `<tr><td colspan="7" class="empty-sem-row">Results Not Released / Available</td></tr>`;
                 }
 
                 html += `
@@ -336,11 +349,13 @@
                             <table class="cmm-grid-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:18%;">SUBJECT CODE</th>
-                                        <th style="width:50%;">SUBJECT TITLE</th>
-                                        <th style="width:10%;">GRADE POINT</th>
+                                        <th style="width:16%;">SUBJECT CODE</th>
+                                        <th style="width:42%;">SUBJECT TITLE</th>
+                                        <th style="width:8%;">INT.</th>
+                                        <th style="width:8%;">EXT.</th>
+                                        <th style="width:8%;">TOTAL</th>
                                         <th style="width:10%;">GRADE</th>
-                                        <th style="width:12%;">CREDITS</th>
+                                        <th style="width:8%;">CR.</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
@@ -352,13 +367,15 @@
                                     <tr class="${isFail ? 'row-failed' : ''}">
                                         <td class="col-code">${sub.code}</td>
                                         <td class="col-title">${sub.name}</td>
-                                        <td class="col-center">${isFail ? '' : sub.points}</td>
+                                        <td class="col-center">${sub.internal}</td>
+                                        <td class="col-center">${sub.external}</td>
+                                        <td class="col-center">${sub.marks}</td>
                                         <td class="col-center grade-cell ${isFail ? 'fail-txt' : ''}">${sub.grade}</td>
                                         <td class="col-right">${sub.credits.toFixed(1)}</td>
                                     </tr>`;
                     });
                 } else {
-                    html += `<tr><td colspan="5" class="empty-sem-row">Results Not Released / Available</td></tr>`;
+                    html += `<tr><td colspan="7" class="empty-sem-row">Results Not Released / Available</td></tr>`;
                 }
 
                 html += `
@@ -405,7 +422,6 @@
                     <div class="res-profile-top">
                         <div class="res-student-info">
                             <div class="res-student-name">${name}</div>
-                            <div class="res-roll-number">${roll}</div>
                             <div class="res-branch-name">${branchName}</div>
                             <div class="res-college-name">${collegeName}</div>
                         </div>

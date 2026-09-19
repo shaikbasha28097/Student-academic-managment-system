@@ -157,19 +157,18 @@ def parse_result_html(html: str, meta: dict) -> dict | None:
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, 'html.parser')
 
-    # Extract student name
+    # Extract the official name from the explicitly labeled JNTUH field.
     name = ''
+    roll_pattern = re.compile(r'^\d{2}[A-Z0-9]{6,}$', re.IGNORECASE)
     for td in soup.select('table td'):
-        txt = td.get_text(strip=True).lower()
-        if 'student name' in txt or txt == 'name':
-            nxt = td.find_next_sibling('td')
-            if nxt:
-                name = nxt.get_text(strip=True)
-                break
-    if not name:
-        tds = soup.select('table tr:first-child td')
-        if len(tds) >= 2:
-            name = tds[1].get_text(strip=True)
+        label = re.sub(r'[^a-z]', '', td.get_text(' ', strip=True).lower())
+        if label not in {'name', 'studentname'}:
+            continue
+        value_cell = td.find_next_sibling('td')
+        candidate = value_cell.get_text(' ', strip=True) if value_cell else ''
+        if candidate and not roll_pattern.fullmatch(candidate.replace(' ', '')):
+            name = candidate
+            break
 
     subjects = []
     sgpa_val = 0.0
@@ -178,18 +177,21 @@ def parse_result_html(html: str, meta: dict) -> dict | None:
         rows = table.find_all('tr')
         if len(rows) < 2:
             continue
-        headers = [th.get_text(strip=True).lower() for th in rows[0].find_all(['th', 'td'])]
+        headers = [th.get_text(' ', strip=True).lower() for th in rows[0].find_all(['th', 'td'])]
         if not any(w in h for h in headers for w in ['grade', 'subject', 'credits']):
             continue
 
-        idx = {'code': -1, 'name': -1, 'grade': -1, 'credits': -1, 'int': -1, 'ext': -1}
+        idx = {'code': -1, 'name': -1, 'total': -1, 'grade': -1, 'credits': -1, 'result': -1, 'int': -1, 'ext': -1}
         for i, h in enumerate(headers):
-            if 'sub code' in h or h == 'code': idx['code'] = i
-            if 'subject name' in h or h == 'subject': idx['name'] = i
-            if 'grade' in h and 'point' not in h: idx['grade'] = i
-            if 'credit' in h: idx['credits'] = i
-            if 'internal' in h or h.startswith('int'): idx['int'] = i
-            if 'external' in h or h.startswith('ext'): idx['ext'] = i
+            header_key = re.sub(r'[^a-z]', '', h)
+            if header_key in {'subjectcode', 'subcode', 'coursecode', 'code'}: idx['code'] = i
+            if header_key in {'subjectname', 'subname', 'coursename', 'subject'}: idx['name'] = i
+            if header_key in {'total', 'totalmarks', 'marks', 'mark'}: idx['total'] = i
+            if 'grade' in header_key and 'point' not in header_key: idx['grade'] = i
+            if 'credit' in header_key: idx['credits'] = i
+            if header_key in {'result', 'status', 'passfail'}: idx['result'] = i
+            if 'internal' in header_key or header_key.startswith('int'): idx['int'] = i
+            if 'external' in header_key or header_key.startswith('ext'): idx['ext'] = i
 
         if idx['name'] == -1 and idx['grade'] == -1:
             continue
@@ -212,8 +214,11 @@ def parse_result_html(html: str, meta: dict) -> dict | None:
 
             def get(k): return cells[idx[k]] if idx[k] >= 0 and idx[k] < len(cells) else ''
             sub_name = get('name')
+            subject_code = get('code').strip().upper()
+            total_marks = get('total').strip()
             grade = get('grade')
             credits_str = get('credits')
+            result_status = get('result').strip().upper()
 
             if not sub_name or sub_name.lower() == 'subject name':
                 continue
@@ -232,11 +237,17 @@ def parse_result_html(html: str, meta: dict) -> dict | None:
             except ValueError:
                 cred_num = 0.0
 
+            if not result_status:
+                result_status = 'PASS' if grade.upper().strip() not in ('F', 'AB', 'ABSENT', 'W', '--', '') else 'FAIL'
+
             subjects.append({
-                'code': get('code'),
+                'code': subject_code,
                 'name': sub_name,
+                'marks': total_marks,
+                'total': total_marks,
                 'grade': grade or '-',
                 'credits': cred_num,
+                'result': result_status,
                 'points': grade_to_points(grade),
                 'internal': get('int'),
                 'external': get('ext'),

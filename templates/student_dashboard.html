@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Student Dashboard – SAMS</title>
+    <title>Student Dashboard – Student Academic Management System</title>
     <meta charset="UTF-8">
-    <meta name="description" content="Student portal for attendance, exam results and fees at DRK SAMS">
+    <meta name="description" content="Student portal for attendance, exam results and fees at DRK Institute of Science & Technology">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
         html, body { overflow-x: hidden; }
-        body { margin:0; font-family:'Inter','Segoe UI',system-ui,sans-serif; background:#f0f4f8; color:#111827; min-width:320px; }
+        body { margin:0; display:block; width:100%; font-family:'Inter','Segoe UI',system-ui,sans-serif; background:#f0f4f8; color:#111827; min-width:320px; }
         /* ── Sidebar ── */
         .sidebar {
-            width: 230px; height:100vh; background:#1e293b;
+            width: 240px; height:100vh; background:#1e293b;
             position:fixed; overflow-y:auto; z-index:200;
             transition: transform 0.3s ease;
         }
@@ -35,7 +36,31 @@
         .sidebar a:hover { background:#334155; color:#fff; }
         .sidebar a.active-link { background:rgba(59,130,246,0.15); color:#93c5fd; border-right:3px solid #3b82f6; font-weight:700; }
         /* ── Main Content ── */
-        .content { margin-left:240px; padding:24px; }
+        .student-main { margin-left:240px; width:calc(100% - 240px); min-height:100vh; }
+        .student-header {
+            height:62px; padding:0 28px; background:#fff; border-bottom:1px solid #e5e7eb;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:100; box-shadow:0 1px 4px rgba(0,0,0,0.06);
+        }
+        .student-header h1 { margin:0; font-size:19px; font-weight:700; color:#111827; }
+        .student-header-actions { display:flex; align-items:center; gap:12px; }
+        .student-header select {
+            padding:6px 10px; border:1px solid #e5e7eb; border-radius:6px;
+            background:#f1f5f9; color:#374151; font:inherit; font-size:13px;
+        }
+        .student-user-chip {
+            display:flex; align-items:center; gap:7px; padding:6px 14px;
+            border:1px solid #e5e7eb; border-radius:100px; background:#f1f5f9;
+            color:#374151; font-size:14px; font-weight:600;
+        }
+        .student-user-chip i { color:#3b82f6; }
+        .student-logout {
+            display:flex; align-items:center; gap:6px; padding:8px 16px;
+            border-radius:9px; background:#ef4444; color:#fff; text-decoration:none;
+            font-size:14px; font-weight:700;
+        }
+        .student-logout:hover { background:#dc2626; }
+        .content { padding:26px; }
         /* ── Summary Cards ── */
         .cards {
             display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -486,7 +511,8 @@
         }
         .sidebar-overlay.active { display: block; }
         @media (max-width: 1024px) {
-            .content { margin-left: 220px; width: calc(100% - 220px); padding: 20px; }
+            .student-main { margin-left: 220px; width:calc(100% - 220px); }
+            .content { padding: 20px; }
             .sidebar { width: 220px; }
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -494,7 +520,13 @@
             .hamburger { display: flex; }
             .sidebar { transform: translateX(-100%); z-index: 1000; width: 268px; }
             .sidebar.open { transform: translateX(0); }
-            .content { margin-left: 0 !important; width: 100% !important; padding: 14px; padding-top: 66px; box-sizing: border-box; }
+            .student-main { margin-left: 0 !important; width:100% !important; }
+            .student-header { padding:0 14px 0 58px; }
+            .student-header-actions { gap:6px; }
+            .student-user-chip { padding:6px 9px; font-size:12px; }
+            .student-logout { padding:8px 10px; font-size:0; }
+            .student-logout i { font-size:14px; }
+            .content { padding: 14px; padding-top: 20px; box-sizing: border-box; }
             .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
             table { display: block; overflow-x: auto; white-space: nowrap; width: 100%; }
             .sams-card-header { flex-direction: column; align-items: flex-start; }
@@ -504,7 +536,7 @@
         }
         @media (max-width: 480px) {
             .cards { grid-template-columns: 1fr; }
-            .content { padding: 12px; padding-top: 72px; }
+            .content { padding: 12px; }
             .card { padding: 14px 16px; }
             .profile-card { padding: 18px; }
         }
@@ -520,7 +552,7 @@
         <div class="brand-icon"><i class="fas fa-user-graduate"></i></div>
         <div>
             <div class="brand-name">DRK Students</div>
-            <div class="brand-sub">SAMS 4th Year</div>
+            <div class="brand-sub">Student Academic Management System</div>
         </div>
     </div>
     <a href="?tab=attendance"  class="{{ 'active-link' if active_tab=='attendance'  else '' }}"><i class="fas fa-clipboard-list"></i> Attendance</a>
@@ -533,6 +565,19 @@
     <a href="?tab=jntuh" class="{{ 'active-link' if active_tab=='jntuh' else '' }}" style="color:#60a5fa; font-weight:700;"><i class="fas fa-graduation-cap"></i> JNTUH Results</a>
     <a href="/logout" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i> Logout</a>
 </div>
+
+<main class="student-main">
+<header class="student-header">
+    <h1>Dashboard</h1>
+    <div class="student-header-actions">
+        <select id="studentLangSelect" onchange="setLanguage(this.value)" aria-label="Language">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+        </select>
+        <span class="student-user-chip"><i class="fas fa-user-graduate"></i> {{ student.student_id }}</span>
+        <a href="/logout" class="student-logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+    </div>
+</header>
 
 <div class="content">
     <!-- SUMMARY CARDS -->
@@ -705,7 +750,7 @@
     <div id="material" class="section {{ 'active' if active_tab=='material' else '' }}">
         <h2>Course Material</h2>
         {% for f in materials %}
-        <p>📄 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        <p>📄 <a href="{{ url_for('uploaded_file', filename=f.file_path) }}" target="_blank">{{ f.title }}</a></p>
         {% else %}
         <p>No course material uploaded.</p>
         {% endfor %}
@@ -715,7 +760,7 @@
     <div id="timetable" class="section {{ 'active' if active_tab=='timetable' else '' }}">
         <h2>Timetable</h2>
         {% for f in timetables %}
-        <p>📋 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        <p>📋 <a href="{{ url_for('uploaded_file', filename=f.file_path) }}" target="_blank">{{ f.title }}</a></p>
         {% else %}
         <p>No timetable uploaded.</p>
         {% endfor %}
@@ -725,7 +770,7 @@
     <div id="calendar" class="section {{ 'active' if active_tab=='calendar' else '' }}">
         <h2>Academic Calendar</h2>
         {% for f in calendars %}
-        <p>📅 <a href="/{{ f.file_path }}" target="_blank">{{ f.title }}</a></p>
+        <p>📅 <a href="{{ url_for('uploaded_file', filename=f.file_path) }}" target="_blank">{{ f.title }}</a></p>
         {% else %}
         <p>No academic calendar uploaded.</p>
         {% endfor %}
@@ -795,75 +840,19 @@
     <!-- ═══ JNTUH RESULTS ═══ -->
     <div id="jntuh" class="section {{ 'active' if active_tab=='jntuh' else '' }}">
         <div class="jntuh-dark-container">
-            <!-- Header Pill Badge matching design -->
-            <div class="jntuh-top-pill">
-                Jawaharlal Nehru Technological University, Hyderabad
-            </div>
-
-            <!-- 4-Box Navigation Grid -->
-            <div class="jntuh-cards-grid">
-                <div class="jntuh-nav-card active" id="card-box-1" onclick="switchJntuhBox(1)">
-                    <div class="card-title">Academic Result &rarr;</div>
-                    <div class="card-desc">Access your overall academic performance with just an hallticket.</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-2" onclick="switchJntuhBox(2)">
-                    <div class="card-title">Credit Checker &rarr;</div>
-                    <div class="card-desc">Check your credits to find out how many you need to move on to the next year or to graduate</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-7" onclick="switchJntuhBox(7)">
-                    <div class="card-title">Semester Wise Result &rarr;</div>
-                    <div class="card-desc">Check semester-wise SGPA, total marks, credits, and Regular/Supplementary status</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-3" onclick="switchJntuhBox(3)">
-                    <div class="card-title">Jobs and Careers &rarr;</div>
-                    <div class="card-desc">Explore career paths, find internships, jobs and kickstart your professional journey</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-4" onclick="switchJntuhBox(4)">
-                    <div class="card-title">Syllabus &rarr;</div>
-                    <div class="card-desc">Access detailed syllabus subject wise for your academic year</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-5" onclick="switchJntuhBox(5)">
-                    <div class="card-title">Backlog Report &rarr;</div>
-                    <div class="card-desc">Access your overall backlogs report with an hallticket</div>
-                </div>
-                <div class="jntuh-nav-card" id="card-box-6" onclick="switchJntuhBox(6)">
-                    <div class="card-title">Class Results &rarr;</div>
-                    <div class="card-desc">View the results of your classmates and compare your performance with theirs</div>
-                </div>
-            </div>
-
-            <!-- Feature Panel -->
             <div class="jntuh-feature-panel">
-                <!-- Search row for Boxes 1, 2, 5 -->
                 <div id="jntuh-input-bar" class="jntuh-search-row">
                     <div style="flex:1; min-width:180px;">
                         <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Hallticket Number</label>
                         <input type="text" id="jntuh-roll" class="jntuh-input" placeholder="e.g. 21DR1A0501" value="{{ student.student_id | default('') }}">
                     </div>
                     <div style="width:170px;">
-                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Date of Birth (Optional)</label>
+                        <label style="display:block; font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:6px;">Date of Birth</label>
                         <input type="text" id="jntuh-dob" class="jntuh-input" placeholder="YYYY/MM/DD" value="{{ student.dob if student.dob else '' }}">
-                    </div>
-                    <div style="width:170px;">
-                        <label style="display:block; font-size:12px; color:#38bdf8; font-weight:600; margin-bottom:6px;">Choose Semester</label>
-                        <select id="jntuh-sem-select" class="jntuh-input" style="cursor:pointer; background:#0d1019; color:#fff;" onchange="onSemesterFilterChange(this.value)">
-                            <option value="all">All Semesters (1-8)</option>
-                            <option value="1">1st Sem (1-1)</option>
-                            <option value="2">2nd Sem (1-2)</option>
-                            <option value="3">3rd Sem (2-1)</option>
-                            <option value="4">4th Sem (2-2)</option>
-                            <option value="5">5th Sem (3-1)</option>
-                            <option value="6">6th Sem (3-2)</option>
-                            <option value="7">7th Sem (4-1)</option>
-                            <option value="8">8th Sem (4-2)</option>
-                        </select>
                     </div>
                     <div style="display:flex; align-items:flex-end; gap:8px;">
                         <button class="jntuh-btn" id="jntuh-action-btn" onclick="executeCurrentJntuhFeature(false)">
-                            🎓 Fetch Academic Result
-                        </button>
-                        <button class="jntuh-btn" style="background:#0284c7; color:#fff;" onclick="executeCurrentJntuhFeature(true)" title="Force live fetch from official JNTUH website">
-                            🔄 Live Refresh
+                            Fetch Result
                         </button>
                     </div>
                 </div>
@@ -882,6 +871,7 @@
         </div>
     </div>
 </div>
+</main>
 
 <div id="student-dashboard-root"
      data-show-password-form="{{ 'true' if pw_error or pw_msg else 'false' }}"
@@ -1252,7 +1242,7 @@ function renderCreditChecker(data) {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:15px;">
             <div>
                 <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">Credit Progress &amp; Promotion Eligibility</h3>
-                <p style="margin:0; color:#94a3b8; font-size:14px;">Hallticket: <strong>${data.roll}</strong> (${data.name || ''})</p>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Student Name: <strong>${data.jntuh_name || data.name || 'JNTUH RECORD'}</strong></p>
             </div>
             <div style="text-align:right;">
                 <span style="font-size:28px; font-weight:800; color:#38bdf8;">${totalCredits}</span>
@@ -1351,7 +1341,7 @@ function renderBacklogReport(data) {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
             <div>
                 <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">⚠️ Active Backlog Report</h3>
-                <p style="margin:0; color:#94a3b8; font-size:14px;">Hallticket: <strong>${data.roll}</strong> (${data.name || ''})</p>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Student Name: <strong>${data.jntuh_name || data.name || 'JNTUH RECORD'}</strong></p>
             </div>
             <div>
                 <span style="padding:6px 16px; border-radius:20px; font-weight:800; font-size:14px; ${backlogs.length > 0 ? 'background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);' : 'background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);'}">
@@ -1498,6 +1488,7 @@ if (dashboardRoot && dashboardRoot.dataset.autoFetchJntuh === 'true') {
         document.getElementById('sidebarOverlay').classList.remove('active');
     }
 </script>
+<script src="/static/common.js"></script>
 <script src="/static/jntuh_memo.js"></script>
 <script src="/static/ux.js"></script>
 </body>

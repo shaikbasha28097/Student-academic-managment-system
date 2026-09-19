@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Faculty Dashboard – SAMS</title>
+    <title>Faculty Dashboard – Student Academic Management System</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <meta name="description" content="Faculty portal for managing attendance, marks and students at DRK SAMS">
+    <meta name="description" content="Faculty portal for managing attendance, marks and students at DRK Institute of Science & Technology">
     
 <style>
-        /* ── Use shared SAMS design system from styles.css ── */
+        /* ── Use the shared dashboard design system from styles.css ── */
         body {
             font-family: 'Inter','Segoe UI',system-ui,sans-serif;
             background: #f0f4f8;
@@ -495,7 +495,7 @@
 <div class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-        <div class="brand-name">SAMS Faculty Portal</div>
+        <div class="brand-name">Student Academic Management System</div>
         <div class="brand-sub">Faculty Dashboard</div>
     </div>
     <a href="#" class="" id="btn-mystudents" onclick="showSection('mystudents');closeSidebar();">My Students</a>
@@ -932,30 +932,6 @@ function showSection(section) {
                 Jawaharlal Nehru Technological University, Hyderabad
             </div>
 
-            <!-- 4-Box Navigation Grid -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:22px; margin-bottom:30px;">
-                <div class="jntuh-nav-card active" id="fac-card-box-1" onclick="facSwitchJntuhBox(1)">
-                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Academic Result &rarr;</div>
-                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Access overall student academic performance with hallticket number.</div>
-                </div>
-                <div class="jntuh-nav-card" id="fac-card-box-2" onclick="facSwitchJntuhBox(2)">
-                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Credit Checker &rarr;</div>
-                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Check credits required for promotion to next year or graduation.</div>
-                </div>
-                <div class="jntuh-nav-card" id="fac-card-box-7" onclick="facSwitchJntuhBox(7)">
-                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Semester Wise Result &rarr;</div>
-                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Check semester-wise SGPA, total marks, credits, and Regular/Supplementary status.</div>
-                </div>
-                <div class="jntuh-nav-card" id="fac-card-box-5" onclick="facSwitchJntuhBox(5)">
-                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Backlog Report &rarr;</div>
-                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">Inspect detailed failed/backlog subjects report for a student.</div>
-                </div>
-                <div class="jntuh-nav-card" id="fac-card-box-6" onclick="facSwitchJntuhBox(6)">
-                    <div style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">Class Results &rarr;</div>
-                    <div style="font-size:13px; color:#94a3b8; line-height:1.5;">View class performance summary, average CGPA and ranking leaderboard.</div>
-                </div>
-            </div>
-
             <!-- Feature Panel -->
             <div style="background:#111522; border-radius:16px; padding:28px; border:1px solid #1e2638;">
                 <div id="fac-jntuh-input-bar" style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:24px; background:#181d2d; padding:20px; border-radius:12px; border:1px solid #242c42;">
@@ -995,9 +971,6 @@ function showSection(section) {
                     <p style="color:#94a3b8; font-weight:600;">Fetching JNTUH Data...</p>
                 </div>
                 <div id="fac-jntuh-feature-output"></div>
-                <div style="text-align:center; padding:16px; font-size:12px; color:#64748b; border-top:1px solid #1e2638; margin-top:20px;">
-                    Powered by <a href="https://jntuhconnect.dhethi.com" target="_blank" style="color:#38bdf8; text-decoration:none;">JNTUHConnect</a>
-                </div>
             </div>
         </div>`;
         content.innerHTML = renderSectionCard('JNTUH Results', '', content.innerHTML);
@@ -1649,7 +1622,7 @@ function facRenderSemesterWiseResultCheck(data) {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
             <div>
                 <h3 style="margin:0 0 4px; color:#ffffff; font-size:20px;">📅 Semester-Wise Result Check</h3>
-                <p style="margin:0; color:#94a3b8; font-size:14px;">Student Name: <strong style="color:#fff;">${data.name || data.roll}</strong> &nbsp;|&nbsp; Hallticket: <strong style="color:#38bdf8;">${data.roll}</strong></p>
+                <p style="margin:0; color:#94a3b8; font-size:14px;">Student Name: <strong style="color:#fff;">${data.jntuh_name || data.name || 'JNTUH RECORD'}</strong></p>
             </div>
             <div style="text-align:right;">
                 <span style="font-size:24px; font-weight:800; color:#38bdf8;">${cgpa.toFixed(2)}</span>
@@ -1732,7 +1705,7 @@ function facRenderCredit(data) {
     const rem = Math.max(0, 160 - tc);
     output.innerHTML = `
     <div style="background:#181d2d; border:1px solid #28334a; border-radius:14px; padding:24px;">
-        <h3 style="margin:0 0 10px; color:#fff; font-size:18px;">Credit Progress Report (${data.roll})</h3>
+        <h3 style="margin:0 0 10px; color:#fff; font-size:18px;">Credit Progress Report</h3>
         <div style="font-size:24px; font-weight:800; color:#38bdf8; margin-bottom:15px;">${tc} / 160 Passed Credits</div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
             <div style="background:#0d1019; padding:12px; border-radius:8px; border:1px solid ${tc>=20?'#059669':'#dc2626'}; color:${tc>=20?'#34d399':'#f87171'}; font-size:13px; font-weight:700;">1st &rarr; 2nd Yr: ${tc>=20?'ELIGIBLE':'SHORT'}</div>
